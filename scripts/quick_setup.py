@@ -426,10 +426,6 @@ except Exception as e:
                         False,
                         f"Erro ao interpretar o JSON. Erro: {e}"
                     )
-
-                    print("\n==============DEBUG JSON============")
-                    print(f"[DEBUG] Conteúdo recebido que falhou: {result.stdout}")
-                    print("\n==============DEBUG JSON============")
                     return False
             else:
                 self.log_step(

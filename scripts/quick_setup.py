@@ -383,7 +383,6 @@ except Exception as e:
             return False
         
         validate_script = self.project_root / "scripts/validate_env.py"
-        print(validate_script)
         if not validate_script.exists():
             self.log_step(
                 "Validação Final",
@@ -401,7 +400,7 @@ except Exception as e:
                 text=True,
                 timeout=60
             )
-            
+
             if result.returncode == 0:
                 # Parse JSON output
                 try:
@@ -421,12 +420,16 @@ except Exception as e:
                             f"Validação falhou com {error_count} erros"
                         )
                         return False
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
                     self.log_step(
                         "Validação Final",
                         False,
-                        "Erro ao interpretar resultado da validação"
+                        f"Erro ao interpretar o JSON. Erro: {e}"
                     )
+
+                    print("\n==============DEBUG JSON============")
+                    print(f"[DEBUG] Conteúdo recebido que falhou: {result.stdout}")
+                    print("\n==============DEBUG JSON============")
                     return False
             else:
                 self.log_step(

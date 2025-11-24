@@ -30,7 +30,7 @@ class QuickSetup:
     """Classe para configuração rápida do projeto"""
     
     def __init__(self):
-        self.project_root = Path(__file__).parent
+        self.project_root = Path(__file__).parent.parent
         self.env_file = self.project_root / '.env'
         self.env_template = self.project_root / '.env.template'
         self.venv_path = self.project_root / 'venv'
@@ -382,7 +382,8 @@ except Exception as e:
             )
             return False
         
-        validate_script = self.project_root / "validate_env.py"
+        validate_script = self.project_root / "scripts/validate_env.py"
+        print(validate_script)
         if not validate_script.exists():
             self.log_step(
                 "Validação Final",
@@ -390,7 +391,7 @@ except Exception as e:
                 "Script de validação não encontrado"
             )
             return False
-        
+    
         try:
             print("[INFO] Executando validação final...")
             result = subprocess.run(

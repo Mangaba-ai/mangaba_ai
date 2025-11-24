@@ -29,7 +29,7 @@ class EnvironmentValidator:
     """Classe para validação do ambiente"""
     
     def __init__(self):
-        self.project_root = Path(__file__).parent
+        self.project_root = Path(__file__).parent.parent
         self.env_file = self.project_root / '.env'
         self.results = []
         self.warnings = []

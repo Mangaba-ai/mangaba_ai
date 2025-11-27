@@ -29,8 +29,9 @@ class EnvironmentValidator:
     """Classe para validação do ambiente"""
     
     def __init__(self):
-        self.project_root = Path(__file__).parent
+        self.project_root = Path(__file__).parent.parent
         self.env_file = self.project_root / '.env'
+        self.silent = False
         self.results = []
         self.warnings = []
         self.errors = []
@@ -597,7 +598,6 @@ class EnvironmentValidator:
     
     def run_validation(self, save_report: bool = False) -> bool:
         """Executa validação completa"""
-        self.print_header()
         
         # Lista de verificações
         checks = [
@@ -610,39 +610,57 @@ class EnvironmentValidator:
             ("Conectividade API", self.check_api_connectivity),
             ("Ambiente de testes", self.check_test_environment)
         ]
-        
-        print("Executando verificações...")
-        print()
-        
-        # Executa verificações
-        for check_name, check_func in checks:
-            print(f"[CHECK] {check_name}...", end=" ")
-            try:
-                result = check_func()
-                if result:
-                    print(f"{Colors.GREEN}OK{Colors.END}")
-                else:
-                    print(f"{Colors.RED}FALHOU{Colors.END}")
-            except Exception as e:
-                print(f"{Colors.RED}ERRO: {e}{Colors.END}")
-                self.log_result(
-                    check_name,
-                    "ERROR",
-                    "Erro inesperado na verificação",
-                    str(e)
-                )
-        
-        print()
-        
-        # Mostra resumo
-        self.print_summary()
-        
+
+        # se o script foi executado no modo --json-output
+        if self.silent:
+            for check_name, check_func in checks:
+                try:
+                    result = check_func()
+                except Exception as e:
+                        self.log_result(
+                                check_name,
+                                "ERROR",
+                                "Erro inesperado na verificação",
+                                str(e)
+                                )
+        #caso contrario printa todos detalhes dos processos
+        else:
+            self.print_header()
+            print("Executando verificações...")
+            print()
+            
+            # Executa verificações
+            for check_name, check_func in checks:
+                print(f"[CHECK] {check_name}...", end=" ")
+                try:
+                    result = check_func()
+                    if result:
+                        print(f"{Colors.GREEN}OK{Colors.END}")
+                    else:
+                        print(f"{Colors.RED}FALHOU{Colors.END}")
+                except Exception as e:
+                    print(f"{Colors.RED}ERRO: {e}{Colors.END}")
+                    self.log_result(
+                        check_name,
+                        "ERROR",
+                        "Erro inesperado na verificação",
+                        str(e)
+                    )
+            
+            
+            print()
+            
+            # Mostra resumo
+            self.print_summary()
+            
         # Salva relatório se solicitado
         if save_report:
             self.save_report()
         
         # Retorna True se não há erros críticos
         return len(self.errors) == 0
+    
+    
 
 
 def main():
@@ -670,6 +688,7 @@ def main():
         
         if args.json_output:
             # Executa validação silenciosa
+            validator.silent = True
             validator.run_validation(save_report=False)
             
             # Output apenas JSON

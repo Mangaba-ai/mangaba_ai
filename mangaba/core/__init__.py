@@ -1,4 +1,4 @@
-"""Core components for Mangaba AI v3.0"""
+"""Componentes principais para Mangaba AI v3.0"""
 
 from mangaba.core.agent import Agent
 from mangaba.core.task import Task
@@ -12,12 +12,21 @@ from mangaba.core.output_parsers import JSONOutputParser, PydanticOutputParser
 from mangaba.core.planner import TaskPlanner
 
 __all__ = [
-    "Agent", "Task", "Crew", "Process",
-    "Pipeline", "Stage", "ParallelStage", "ConditionalStage",
-    "EventBus", "Event", "EventType",
+    "Agent",
+    "Task",
+    "Crew",
+    "Process",
+    "Pipeline",
+    "Stage",
+    "ParallelStage",
+    "ConditionalStage",
+    "EventBus",
+    "Event",
+    "EventType",
     "MangabaError",
     "ReActEngine",
     "GuardrailChain",
-    "JSONOutputParser", "PydanticOutputParser",
+    "JSONOutputParser",
+    "PydanticOutputParser",
     "TaskPlanner",
 ]

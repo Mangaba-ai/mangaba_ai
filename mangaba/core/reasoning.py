@@ -1,8 +1,8 @@
 """
-ReAct reasoning engine for Mangaba AI v3.0
+Motor de raciocínio ReAct para Mangaba AI v3.0
 
-Implements the Thought → Action → Observation loop that enables agents
-to use tools intelligently via LLM function calling.
+Implementa o loop Pensamento → Ação → Observação que permite aos agentes
+usar ferramentas de forma inteligente via chamada de função do LLM.
 """
 
 from __future__ import annotations
@@ -15,34 +15,32 @@ from mangaba.core.types import (
     AgentStatus,
     FinishReason,
     LLMResponse,
-    Message,
     ReActStep,
-    Role,
     ToolCall,
     ToolResult,
 )
-from mangaba.core.exceptions import MaxIterationsError, ToolError, ToolNotFoundError
+from mangaba.core.exceptions import MaxIterationsError
 from mangaba.core.events import EventBus, Event, EventType
 
 log = logging.getLogger(__name__)
 
 
 class ReActEngine:
-    """ReAct (Reason + Act) loop executor.
+    """Executor de loop ReAct (Raciocínio + Ação).
 
-    Given an LLM client, a set of tools and a system prompt, the engine
-    iteratively:
-      1. Sends the conversation to the LLM (with tool declarations).
-      2. If the LLM returns tool_calls → executes them, appends results.
-      3. If the LLM returns text (finish_reason=stop) → returns the answer.
-      4. Repeats until ``max_iterations`` is reached.
+    Dado um cliente LLM, um conjunto de ferramentas e um prompt do sistema, o motor
+    iterativamente:
+      1. Envia a conversa para o LLM (com declarações de ferramenta).
+      2. Se o LLM retorna tool_calls → executa-os, anexa resultados.
+      3. Se o LLM retorna texto (finish_reason=stop) → retorna a resposta.
+      4. Repete até que ``max_iterations`` seja alcançado.
 
     Example::
 
         engine = ReActEngine(llm=llm_client, tools=[SearchTool(), CalcTool()])
         result = engine.run(
-            system_prompt="You are a research analyst.",
-            user_prompt="What is the GDP of Brazil?"
+            system_prompt="Você é um analista de pesquisa.",
+            user_prompt="Qual é o PIB do Brasil?"
         )
         print(result.content)
     """
@@ -71,15 +69,20 @@ class ReActEngine:
         context: Optional[str] = None,
         state: Optional[AgentState] = None,
     ) -> LLMResponse:
-        """Execute the full ReAct loop and return the final LLM response."""
+        """Executa o loop ReAct completo e retorna a resposta final do LLM."""
         messages = self._build_initial_messages(system_prompt, user_prompt, context)
         state = state or AgentState(agent_id="react")
         state.status = AgentStatus.RUNNING
 
-        EventBus.emit(Event(
-            event_type=EventType.AGENT_START,
-            data={"prompt_preview": user_prompt[:200], "tools": list(self._tool_map.keys())},
-        ))
+        EventBus.emit(
+            Event(
+                event_type=EventType.AGENT_START,
+                data={
+                    "prompt_preview": user_prompt[:200],
+                    "tools": list(self._tool_map.keys()),
+                },
+            )
+        )
 
         for iteration in range(1, self.max_iterations + 1):
             state.iteration_count = iteration
@@ -90,25 +93,31 @@ class ReActEngine:
             step = ReActStep(step_number=iteration)
 
             if response.has_tool_calls:
-                # Agent wants to use tools
+                # Agente quer usar ferramentas
                 state.status = AgentStatus.WAITING_TOOL
                 step.thought = response.text or None
                 step.action = response.tool_calls[0]
 
-                EventBus.emit(Event(
-                    event_type=EventType.REACT_ACTION,
-                    data={
-                        "iteration": iteration,
-                        "tool_calls": [tc.model_dump() for tc in response.tool_calls],
-                    },
-                ))
+                EventBus.emit(
+                    Event(
+                        event_type=EventType.REACT_ACTION,
+                        data={
+                            "iteration": iteration,
+                            "tool_calls": [
+                                tc.model_dump() for tc in response.tool_calls
+                            ],
+                        },
+                    )
+                )
 
-                # Append assistant message (with tool calls)
-                messages.append({
-                    "role": "assistant",
-                    "content": response.text or "",
-                    "tool_calls": [tc.model_dump() for tc in response.tool_calls],
-                })
+                # Adicionar mensagem do assistente (com chamadas de ferramentas)
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": response.text or "",
+                        "tool_calls": [tc.model_dump() for tc in response.tool_calls],
+                    }
+                )
 
                 # Execute each tool and collect results
                 tool_results = self._execute_tool_calls(response.tool_calls)
@@ -116,21 +125,30 @@ class ReActEngine:
                 # Check for return_direct
                 for tr in tool_results:
                     tool_obj = self._tool_map.get(tr.tool_name)
-                    if tool_obj and getattr(tool_obj, "return_direct", False) and tr.success:
+                    if (
+                        tool_obj
+                        and getattr(tool_obj, "return_direct", False)
+                        and tr.success
+                    ):
                         state.status = AgentStatus.COMPLETED
                         step.observation = str(tr.output)
                         state.steps.append(step)
-                        EventBus.emit(Event(
-                            event_type=EventType.AGENT_END,
-                            data={"iterations": iteration, "finish": "return_direct"},
-                        ))
+                        EventBus.emit(
+                            Event(
+                                event_type=EventType.AGENT_END,
+                                data={
+                                    "iterations": iteration,
+                                    "finish": "return_direct",
+                                },
+                            )
+                        )
                         return LLMResponse(
                             content=str(tr.output),
                             model=response.model,
                             finish_reason=FinishReason.STOP,
                         )
 
-                # Append tool results as a tool message
+                # Adicionar resultados das ferramentas como mensagem de ferramenta
                 observation_parts = []
                 for tr in tool_results:
                     if tr.success:
@@ -142,21 +160,28 @@ class ReActEngine:
                 step.observation = observation
                 messages.append({"role": "tool", "content": observation})
 
-                EventBus.emit(Event(
-                    event_type=EventType.REACT_OBSERVATION,
-                    data={"iteration": iteration, "observation_preview": observation[:300]},
-                ))
+                EventBus.emit(
+                    Event(
+                        event_type=EventType.REACT_OBSERVATION,
+                        data={
+                            "iteration": iteration,
+                            "observation_preview": observation[:300],
+                        },
+                    )
+                )
 
             else:
-                # Agent is done reasoning — final answer
+                # Agente terminou o raciocínio — resposta final
                 state.status = AgentStatus.COMPLETED
                 step.thought = response.text
                 state.steps.append(step)
 
-                EventBus.emit(Event(
-                    event_type=EventType.AGENT_END,
-                    data={"iterations": iteration, "finish": "stop"},
-                ))
+                EventBus.emit(
+                    Event(
+                        event_type=EventType.AGENT_END,
+                        data={"iterations": iteration, "finish": "stop"},
+                    )
+                )
                 return response
 
             state.steps.append(step)
@@ -164,10 +189,12 @@ class ReActEngine:
 
         # Max iterations exceeded
         state.status = AgentStatus.ERROR
-        EventBus.emit(Event(
-            event_type=EventType.AGENT_ERROR,
-            data={"error": "max_iterations", "iterations": self.max_iterations},
-        ))
+        EventBus.emit(
+            Event(
+                event_type=EventType.AGENT_ERROR,
+                data={"error": "max_iterations", "iterations": self.max_iterations},
+            )
+        )
         raise MaxIterationsError(
             f"ReAct loop exceeded {self.max_iterations} iterations without a final answer."
         )
@@ -182,7 +209,12 @@ class ReActEngine:
         messages: List[Dict[str, Any]] = [{"role": "system", "content": system_prompt}]
         if context:
             messages.append({"role": "user", "content": f"Context:\n{context}"})
-            messages.append({"role": "assistant", "content": "I've noted the context. What would you like me to do?"})
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": "I've noted the context. What would you like me to do?",
+                }
+            )
         messages.append({"role": "user", "content": user_prompt})
         return messages
 
@@ -198,26 +230,32 @@ class ReActEngine:
         for tc in tool_calls:
             tool = self._tool_map.get(tc.tool_name)
             if tool is None:
-                results.append(ToolResult(
-                    call_id=tc.id,
-                    tool_name=tc.tool_name,
-                    error=f"Tool '{tc.tool_name}' not found. Available: {list(self._tool_map.keys())}",
-                    success=False,
-                ))
+                results.append(
+                    ToolResult(
+                        call_id=tc.id,
+                        tool_name=tc.tool_name,
+                        error=f"Tool '{tc.tool_name}' not found. Available: {list(self._tool_map.keys())}",
+                        success=False,
+                    )
+                )
                 continue
             try:
                 output = tool.run(**tc.arguments)
-                results.append(ToolResult(
-                    call_id=tc.id,
-                    tool_name=tc.tool_name,
-                    output=output,
-                    success=True,
-                ))
+                results.append(
+                    ToolResult(
+                        call_id=tc.id,
+                        tool_name=tc.tool_name,
+                        output=output,
+                        success=True,
+                    )
+                )
             except Exception as exc:
-                results.append(ToolResult(
-                    call_id=tc.id,
-                    tool_name=tc.tool_name,
-                    error=str(exc),
-                    success=False,
-                ))
+                results.append(
+                    ToolResult(
+                        call_id=tc.id,
+                        tool_name=tc.tool_name,
+                        error=str(exc),
+                        success=False,
+                    )
+                )
         return results

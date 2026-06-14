@@ -73,7 +73,9 @@ class Config:
             )
 
         # Hiperparâmetros padrão
-        self.temperature = float(os.getenv("MODEL_TEMPERATURE", os.getenv("TEMPERATURE", 0.7)))
+        self.temperature = float(
+            os.getenv("MODEL_TEMPERATURE", os.getenv("TEMPERATURE", 0.7))
+        )
         self.max_output_tokens = int(
             os.getenv("MAX_OUTPUT_TOKENS", os.getenv("MAX_TOKENS", 1024))
         )

@@ -7,17 +7,16 @@ Demonstra aplicações de IA em análise jurídica, contratos e compliance
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mangaba_agent import MangabaAgent
-from protocols.mcp import ContextType, ContextPriority
 import json
-import random
-from datetime import datetime, timedelta
+
 
 class LegalDataGenerator:
     """Gerador de dados jurídicos sintéticos"""
-    
+
     @staticmethod
     def generate_contract_data():
         """Gera dados de contratos para análise"""
@@ -34,12 +33,12 @@ class LegalDataGenerator:
                     "Cláusula de confidencialidade",
                     "Penalidades por atraso",
                     "Rescisão antecipada",
-                    "Foro de eleição"
+                    "Foro de eleição",
                 ],
                 "risk_level": "Médio",
                 "compliance_status": "Conforme",
                 "renewal_option": True,
-                "governing_law": "Lei Brasileira"
+                "governing_law": "Lei Brasileira",
             },
             {
                 "contract_id": "CONT_002",
@@ -53,12 +52,12 @@ class LegalDataGenerator:
                     "Garantia de qualidade",
                     "Condições de pagamento",
                     "Transferência de propriedade",
-                    "Vícios redibitórios"
+                    "Vícios redibitórios",
                 ],
                 "risk_level": "Alto",
                 "compliance_status": "Pendente revisão",
                 "warranty_period": "24 meses",
-                "governing_law": "Lei Brasileira"
+                "governing_law": "Lei Brasileira",
             },
             {
                 "contract_id": "CONT_003",
@@ -72,16 +71,16 @@ class LegalDataGenerator:
                     "Jornada de trabalho",
                     "Benefícios",
                     "Cláusula de não-concorrência",
-                    "Confidencialidade"
+                    "Confidencialidade",
                 ],
                 "risk_level": "Baixo",
                 "compliance_status": "Conforme CLT",
                 "benefits": ["Vale refeição", "Plano de saúde", "Vale transporte"],
-                "governing_law": "CLT"
-            }
+                "governing_law": "CLT",
+            },
         ]
         return contracts
-    
+
     @staticmethod
     def generate_litigation_data():
         """Gera dados de processos judiciais"""
@@ -101,7 +100,7 @@ class LegalDataGenerator:
                 "lawyer": "Dr. João Silva - OAB/SP 123456",
                 "probability_success": 85,
                 "estimated_duration": "8-12 meses",
-                "key_documents": ["Contrato", "Notas fiscais", "Correspondências"]
+                "key_documents": ["Contrato", "Notas fiscais", "Correspondências"],
             },
             {
                 "case_id": "PROC_002",
@@ -118,7 +117,7 @@ class LegalDataGenerator:
                 "lawyer": "Dra. Maria Santos - OAB/SP 654321",
                 "probability_success": 60,
                 "estimated_duration": "6-10 meses",
-                "key_documents": ["CTPS", "Holerites", "Testemunhas"]
+                "key_documents": ["CTPS", "Holerites", "Testemunhas"],
             },
             {
                 "case_id": "PROC_003",
@@ -135,11 +134,11 @@ class LegalDataGenerator:
                 "lawyer": "Dr. Carlos Oliveira - OAB/SP 789012",
                 "probability_success": 75,
                 "estimated_duration": "12-18 meses",
-                "key_documents": ["Auto de infração", "Defesa", "Jurisprudência"]
-            }
+                "key_documents": ["Auto de infração", "Defesa", "Jurisprudência"],
+            },
         ]
         return cases
-    
+
     @staticmethod
     def generate_compliance_data():
         """Gera dados de compliance"""
@@ -154,11 +153,11 @@ class LegalDataGenerator:
                     "Política de privacidade atualizada",
                     "Treinamento de funcionários",
                     "DPO nomeado",
-                    "Procedimentos de resposta a incidentes"
+                    "Procedimentos de resposta a incidentes",
                 ],
                 "gaps": ["Auditoria de fornecedores", "Testes de segurança"],
                 "risk_level": "Baixo",
-                "action_plan": "Implementar auditoria trimestral"
+                "action_plan": "Implementar auditoria trimestral",
             },
             {
                 "area": "Lei Anticorrupção (Lei 12.846/2013)",
@@ -170,11 +169,11 @@ class LegalDataGenerator:
                     "Canal de denúncias",
                     "Due diligence de terceiros",
                     "Treinamentos periódicos",
-                    "Monitoramento contínuo"
+                    "Monitoramento contínuo",
                 ],
                 "gaps": ["Atualização de políticas"],
                 "risk_level": "Muito Baixo",
-                "action_plan": "Revisão anual de políticas"
+                "action_plan": "Revisão anual de políticas",
             },
             {
                 "area": "Direito do Consumidor (CDC)",
@@ -186,27 +185,28 @@ class LegalDataGenerator:
                     "Política de trocas e devoluções",
                     "Informações claras sobre produtos",
                     "Contratos em linguagem simples",
-                    "Respeito ao direito de arrependimento"
+                    "Respeito ao direito de arrependimento",
                 ],
                 "gaps": ["Melhoria no atendimento", "Revisão de contratos"],
                 "risk_level": "Médio",
-                "action_plan": "Treinamento da equipe de atendimento"
-            }
+                "action_plan": "Treinamento da equipe de atendimento",
+            },
         ]
         return compliance_areas
+
 
 def demo_contract_analysis():
     """Demonstra análise de contratos"""
     print("📋 Análise de Contratos")
     print("=" * 50)
-    
+
     agent = MangabaAgent(agent_id="contract_analyst")
-    
+
     # Gera dados de contratos
     contracts = LegalDataGenerator.generate_contract_data()
-    
+
     print(f"📄 Analisando {len(contracts)} contratos...")
-    
+
     # Análise de riscos contratuais
     risk_analysis_prompt = f"""
     Analise os riscos dos seguintes contratos:
@@ -220,10 +220,10 @@ def demo_contract_analysis():
     4. Recomendações de mitigação
     5. Necessidade de revisão ou renegociação
     """
-    
+
     risk_analysis = agent.chat(risk_analysis_prompt, use_context=True)
     print(f"⚠️ Análise de Riscos: {risk_analysis}")
-    
+
     # Revisão de cláusulas
     clause_review_prompt = """
     Revise as cláusulas contratuais e sugira melhorias:
@@ -235,10 +235,10 @@ def demo_contract_analysis():
     5. Garantias e responsabilidades
     6. Confidencialidade e propriedade intelectual
     """
-    
+
     clause_review = agent.chat(clause_review_prompt, use_context=True)
     print(f"📝 Revisão de Cláusulas: {clause_review}")
-    
+
     # Compliance contratual
     compliance_check_prompt = """
     Verifique a conformidade dos contratos com:
@@ -249,29 +249,30 @@ def demo_contract_analysis():
     4. Jurisprudência relevante
     5. Políticas internas da empresa
     """
-    
+
     compliance_check = agent.chat(compliance_check_prompt, use_context=True)
     print(f"\n✅ Verificação de Compliance: {compliance_check}")
-    
+
     return {
         "contracts_analyzed": len(contracts),
         "risk_analysis": risk_analysis,
         "clause_review": clause_review,
-        "compliance_check": compliance_check
+        "compliance_check": compliance_check,
     }
+
 
 def demo_litigation_management():
     """Demonstra gestão de processos judiciais"""
     print("\n⚖️ Gestão de Processos Judiciais")
     print("=" * 50)
-    
+
     agent = MangabaAgent(agent_id="litigation_manager")
-    
+
     # Gera dados de processos
     cases = LegalDataGenerator.generate_litigation_data()
-    
+
     print(f"📁 Gerenciando {len(cases)} processos...")
-    
+
     # Análise de probabilidade de sucesso
     success_analysis_prompt = f"""
     Analise a probabilidade de sucesso dos processos:
@@ -285,10 +286,10 @@ def demo_litigation_management():
     4. Histórico do juízo
     5. Estratégia processual recomendada
     """
-    
+
     success_analysis = agent.chat(success_analysis_prompt, use_context=True)
     print(f"🎯 Análise de Probabilidade: {success_analysis}")
-    
+
     # Estratégia processual
     strategy_prompt = """
     Desenvolva estratégias processuais otimizadas:
@@ -300,10 +301,10 @@ def demo_litigation_management():
     5. Possibilidades de acordo
     6. Cronograma de ações
     """
-    
+
     strategy = agent.chat(strategy_prompt, use_context=True)
     print(f"📋 Estratégia Processual: {strategy}")
-    
+
     # Gestão de prazos
     deadline_management_prompt = """
     Crie um sistema de gestão de prazos:
@@ -314,10 +315,10 @@ def demo_litigation_management():
     4. Backup de advogados
     5. Controle de qualidade
     """
-    
+
     deadline_management = agent.chat(deadline_management_prompt, use_context=True)
     print(f"⏰ Gestão de Prazos: {deadline_management}")
-    
+
     # Análise de custos
     cost_analysis_prompt = """
     Analise os custos processuais:
@@ -328,30 +329,31 @@ def demo_litigation_management():
     4. Provisões contábeis
     5. Análise custo-benefício
     """
-    
+
     cost_analysis = agent.chat(cost_analysis_prompt, use_context=True)
     print(f"\n💰 Análise de Custos: {cost_analysis}")
-    
+
     return {
         "cases_managed": len(cases),
         "success_analysis": success_analysis,
         "strategy": strategy,
         "deadline_management": deadline_management,
-        "cost_analysis": cost_analysis
+        "cost_analysis": cost_analysis,
     }
+
 
 def demo_compliance_monitoring():
     """Demonstra monitoramento de compliance"""
     print("\n🛡️ Monitoramento de Compliance")
     print("=" * 50)
-    
+
     agent = MangabaAgent(agent_id="compliance_officer")
-    
+
     # Gera dados de compliance
     compliance_areas = LegalDataGenerator.generate_compliance_data()
-    
+
     print(f"📊 Monitorando {len(compliance_areas)} áreas de compliance...")
-    
+
     # Avaliação de riscos de compliance
     compliance_assessment_prompt = f"""
     Avalie o status de compliance nas seguintes áreas:
@@ -365,10 +367,10 @@ def demo_compliance_monitoring():
     4. Impacto potencial de violações
     5. Prioridades de ação
     """
-    
+
     compliance_assessment = agent.chat(compliance_assessment_prompt, use_context=True)
     print(f"📋 Avaliação de Compliance: {compliance_assessment}")
-    
+
     # Plano de ação
     action_plan_prompt = """
     Desenvolva um plano de ação para compliance:
@@ -380,10 +382,10 @@ def demo_compliance_monitoring():
     5. Métricas de acompanhamento
     6. Responsáveis por cada ação
     """
-    
+
     action_plan = agent.chat(action_plan_prompt, use_context=True)
     print(f"📅 Plano de Ação: {action_plan}")
-    
+
     # Treinamento e conscientização
     training_program_prompt = """
     Crie um programa de treinamento em compliance:
@@ -395,10 +397,10 @@ def demo_compliance_monitoring():
     5. Cronograma de treinamentos
     6. Certificações necessárias
     """
-    
+
     training_program = agent.chat(training_program_prompt, use_context=True)
     print(f"🎓 Programa de Treinamento: {training_program}")
-    
+
     # Monitoramento contínuo
     monitoring_system_prompt = """
     Implemente um sistema de monitoramento contínuo:
@@ -410,49 +412,50 @@ def demo_compliance_monitoring():
     5. Relatórios periódicos
     6. Integração com sistemas existentes
     """
-    
+
     monitoring_system = agent.chat(monitoring_system_prompt, use_context=True)
     print(f"\n📊 Sistema de Monitoramento: {monitoring_system}")
-    
+
     return {
         "compliance_areas": len(compliance_areas),
         "compliance_assessment": compliance_assessment,
         "action_plan": action_plan,
         "training_program": training_program,
-        "monitoring_system": monitoring_system
+        "monitoring_system": monitoring_system,
     }
+
 
 def demo_legal_research():
     """Demonstra pesquisa jurídica"""
     print("\n🔍 Pesquisa Jurídica")
     print("=" * 50)
-    
+
     agent = MangabaAgent(agent_id="legal_researcher")
-    
+
     # Simula temas de pesquisa
     research_topics = [
         {
             "topic": "Responsabilidade Civil por Danos Ambientais",
             "context": "Empresa de mineração com vazamento de rejeitos",
             "urgency": "Alta",
-            "scope": "Jurisprudência STJ e STF"
+            "scope": "Jurisprudência STJ e STF",
         },
         {
             "topic": "Marco Civil da Internet - Responsabilidade de Provedores",
             "context": "Plataforma digital com conteúdo ofensivo",
             "urgency": "Média",
-            "scope": "Doutrina e decisões recentes"
+            "scope": "Doutrina e decisões recentes",
         },
         {
             "topic": "Lei de Recuperação Judicial - Sucessão de Empresas",
             "context": "Aquisição de empresa em recuperação",
             "urgency": "Alta",
-            "scope": "Precedentes e súmulas"
-        }
+            "scope": "Precedentes e súmulas",
+        },
     ]
-    
+
     print(f"📚 Pesquisando {len(research_topics)} temas jurídicos...")
-    
+
     # Pesquisa jurisprudencial
     jurisprudence_research_prompt = f"""
     Realize pesquisa jurisprudencial sobre os seguintes temas:
@@ -466,10 +469,10 @@ def demo_legal_research():
     4. Súmulas aplicáveis
     5. Teses em repercussão geral
     """
-    
+
     jurisprudence_research = agent.chat(jurisprudence_research_prompt, use_context=True)
     print(f"⚖️ Pesquisa Jurisprudencial: {jurisprudence_research}")
-    
+
     # Análise doutrinária
     doctrine_analysis_prompt = """
     Analise a doutrina sobre os temas pesquisados:
@@ -480,10 +483,10 @@ def demo_legal_research():
     4. Propostas de reforma legislativa
     5. Direito comparado
     """
-    
+
     doctrine_analysis = agent.chat(doctrine_analysis_prompt, use_context=True)
     print(f"📖 Análise Doutrinária: {doctrine_analysis}")
-    
+
     # Monitoramento legislativo
     legislative_monitoring_prompt = """
     Monitore mudanças legislativas relevantes:
@@ -494,24 +497,25 @@ def demo_legal_research():
     4. Resoluções de órgãos reguladores
     5. Impacto nas práticas empresariais
     """
-    
+
     legislative_monitoring = agent.chat(legislative_monitoring_prompt, use_context=True)
     print(f"\n🏛️ Monitoramento Legislativo: {legislative_monitoring}")
-    
+
     return {
         "research_topics": len(research_topics),
         "jurisprudence_research": jurisprudence_research,
         "doctrine_analysis": doctrine_analysis,
-        "legislative_monitoring": legislative_monitoring
+        "legislative_monitoring": legislative_monitoring,
     }
+
 
 def demo_document_automation():
     """Demonstra automação de documentos jurídicos"""
     print("\n📄 Automação de Documentos Jurídicos")
     print("=" * 50)
-    
+
     agent = MangabaAgent(agent_id="document_automation")
-    
+
     # Simula tipos de documentos
     document_types = [
         {
@@ -519,26 +523,26 @@ def demo_document_automation():
             "complexity": "Média",
             "variables": ["Partes", "Objeto", "Valor", "Prazo", "Condições"],
             "clauses": 15,
-            "review_time": "2 horas"
+            "review_time": "2 horas",
         },
         {
             "type": "Petição Inicial",
             "complexity": "Alta",
             "variables": ["Autor", "Réu", "Causa de Pedir", "Pedido", "Valor"],
             "sections": 8,
-            "review_time": "4 horas"
+            "review_time": "4 horas",
         },
         {
             "type": "Parecer Jurídico",
             "complexity": "Alta",
             "variables": ["Consulente", "Questão", "Fundamentação", "Conclusão"],
             "pages": 12,
-            "review_time": "6 horas"
-        }
+            "review_time": "6 horas",
+        },
     ]
-    
+
     print(f"🤖 Automatizando {len(document_types)} tipos de documentos...")
-    
+
     # Análise de automação
     automation_analysis_prompt = f"""
     Analise as possibilidades de automação para os documentos:
@@ -552,10 +556,10 @@ def demo_document_automation():
     4. Economia de tempo estimada
     5. Riscos da automação
     """
-    
+
     automation_analysis = agent.chat(automation_analysis_prompt, use_context=True)
     print(f"⚙️ Análise de Automação: {automation_analysis}")
-    
+
     # Templates inteligentes
     smart_templates_prompt = """
     Desenvolva templates inteligentes:
@@ -567,10 +571,10 @@ def demo_document_automation():
     5. Versionamento de templates
     6. Controle de qualidade
     """
-    
+
     smart_templates = agent.chat(smart_templates_prompt, use_context=True)
     print(f"📋 Templates Inteligentes: {smart_templates}")
-    
+
     # Workflow de aprovação
     approval_workflow_prompt = """
     Crie workflows de aprovação de documentos:
@@ -582,22 +586,23 @@ def demo_document_automation():
     5. Histórico de alterações
     6. Assinatura digital
     """
-    
+
     approval_workflow = agent.chat(approval_workflow_prompt, use_context=True)
     print(f"\n✅ Workflow de Aprovação: {approval_workflow}")
-    
+
     return {
         "document_types": len(document_types),
         "automation_analysis": automation_analysis,
         "smart_templates": smart_templates,
-        "approval_workflow": approval_workflow
+        "approval_workflow": approval_workflow,
     }
+
 
 def main():
     """Executa demonstração completa de soluções jurídicas"""
     print("⚖️ Mangaba Agent - Soluções Jurídicas")
     print("=" * 80)
-    
+
     try:
         # Demonstrações de diferentes áreas jurídicas
         contract_result = demo_contract_analysis()
@@ -605,18 +610,18 @@ def main():
         compliance_result = demo_compliance_monitoring()
         research_result = demo_legal_research()
         automation_result = demo_document_automation()
-        
+
         print("\n🎉 DEMONSTRAÇÃO JURÍDICA COMPLETA!")
         print("=" * 70)
-        
+
         print("\n📊 Resumo dos Resultados:")
         print(f"   📋 Contratos analisados: {contract_result['contracts_analyzed']}")
         print(f"   ⚖️ Processos gerenciados: {litigation_result['cases_managed']}")
         print(f"   🛡️ Áreas de compliance: {compliance_result['compliance_areas']}")
         print(f"   🔍 Temas pesquisados: {research_result['research_topics']}")
         print(f"   📄 Tipos de documentos: {automation_result['document_types']}")
-        
-        print(f"\n⚖️ Capacidades Demonstradas:")
+
+        print("\n⚖️ Capacidades Demonstradas:")
         print("   • Análise de riscos contratuais")
         print("   • Revisão de cláusulas e termos")
         print("   • Gestão de processos judiciais")
@@ -631,11 +636,13 @@ def main():
         print("   • Workflows de aprovação")
         print("   • Due diligence automatizada")
         print("   • Gestão de prazos processuais")
-        
+
     except Exception as e:
         print(f"❌ Erro durante demonstração jurídica: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     main()

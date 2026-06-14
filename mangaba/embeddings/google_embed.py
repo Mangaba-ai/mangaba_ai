@@ -1,5 +1,5 @@
 """
-Google embedding provider for Mangaba AI v3.0
+Provedor de embedding Google para Mangaba AI v3.0
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from mangaba.embeddings.base import BaseEmbedding
 
 
 class GoogleEmbedding(BaseEmbedding):
-    """Embeddings via Google Generative AI."""
+    """Embeddings através do Google Generative AI."""
 
     def __init__(self, api_key: str, model: str = "models/text-embedding-004") -> None:
         try:

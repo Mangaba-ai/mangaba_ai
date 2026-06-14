@@ -1,5 +1,5 @@
 """
-OpenAI embedding provider for Mangaba AI v3.0
+Provedor de embedding OpenAI para Mangaba AI v3.0
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from mangaba.embeddings.base import BaseEmbedding
 
 
 class OpenAIEmbedding(BaseEmbedding):
-    """Embeddings via OpenAI text-embedding models."""
+    """Embeddings via modelos de text-embedding da OpenAI."""
 
     def __init__(self, api_key: str, model: str = "text-embedding-3-small") -> None:
         try:

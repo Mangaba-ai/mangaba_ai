@@ -1,5 +1,5 @@
 """
-Math tools for Mangaba AI v3.0
+Ferramentas matemáticas para Mangaba AI v3.0
 """
 
 from __future__ import annotations
@@ -14,14 +14,23 @@ from mangaba.tools.base import BaseTool
 
 
 class CalculatorInput(BaseModel):
-    expression: str = Field(..., description="Mathematical expression to evaluate, e.g. '2 + 3 * 4'")
+    """Esquema de entrada para a ferramenta de calculadora."""
+
+    expression: str = Field(
+        ..., description="Expressão matemática para avaliar, por exemplo, '2 + 3 * 4'"
+    )
 
 
 class CalculatorTool(BaseTool):
-    """Safely evaluate mathematical expressions."""
+    """Avalia expressões matemáticas com segurança.
+
+    Suporta operações aritméticas básicas: adição, subtração, multiplicação,
+    divisão, divisão inteira, módulo e exponenciação. Usa análise AST para
+    garantir avaliação segura sem executar código arbitrário.
+    """
 
     name = "calculator"
-    description = "Evaluate a mathematical expression and return the numeric result"
+    description = "Avalia uma expressão matemática e retorna o resultado numérico"
     args_schema = CalculatorInput
 
     _SAFE_OPS = {
@@ -37,6 +46,14 @@ class CalculatorTool(BaseTool):
     }
 
     def _run(self, expression: str) -> str:
+        """Avalia uma expressão matemática.
+
+        Args:
+            expression: A expressão matemática para avaliar.
+
+        Returns:
+            O resultado numérico como string ou uma mensagem de erro se a avaliação falhar.
+        """
         try:
             tree = ast.parse(expression, mode="eval")
             result = self._eval_node(tree.body)
@@ -45,6 +62,17 @@ class CalculatorTool(BaseTool):
             return f"Error: {exc}"
 
     def _eval_node(self, node: ast.AST) -> Any:
+        """Avalia recursivamente um nó AST.
+
+        Args:
+            node: O nó AST para avaliar.
+
+        Returns:
+            O valor avaliado do nó.
+
+        Raises:
+            ValueError: Se o tipo ou valor do nó não for suportado.
+        """
         if isinstance(node, ast.Constant):
             if isinstance(node.value, (int, float, complex)):
                 return node.value
@@ -57,6 +85,8 @@ class CalculatorTool(BaseTool):
         if isinstance(node, ast.UnaryOp):
             op_fn = self._SAFE_OPS.get(type(node.op))
             if op_fn is None:
-                raise ValueError(f"Unsupported unary operator: {type(node.op).__name__}")
+                raise ValueError(
+                    f"Unsupported unary operator: {type(node.op).__name__}"
+                )
             return op_fn(self._eval_node(node.operand))
         raise ValueError(f"Unsupported expression node: {type(node).__name__}")

@@ -1,4 +1,4 @@
-"""Tests for vector store factory"""
+"""Testes para fábrica de armazenamento de vetores"""
 
 import pytest
 from unittest.mock import patch, MagicMock
@@ -19,6 +19,7 @@ class TestVectorStoreFactory:
 
         store = create_vectorstore("INMEMORY")
         from mangaba.vectorstores.in_memory import InMemoryVectorStore
+
         assert isinstance(store, InMemoryVectorStore)
 
     def test_get_supported_stores_includes_inmemory(self):
@@ -34,7 +35,11 @@ class TestVectorStoreFactory:
             create_vectorstore("nonexistent")
 
     def test_register_custom_store(self):
-        from mangaba.vectorstores.factory import register_store, create_vectorstore, STORE_REGISTRY
+        from mangaba.vectorstores.factory import (
+            register_store,
+            create_vectorstore,
+            STORE_REGISTRY,
+        )
 
         class DummyStore:
             def __init__(self, **kwargs):
@@ -68,15 +73,29 @@ class TestVectorStoreFactory:
         mock_client.ft.return_value = mock_ft
         mock_ft.info.return_value = {"index_name": "test"}
 
-        mock_fields = (MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock())
+        mock_fields = (
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+        )
 
-        with patch("mangaba.vectorstores.redis.redis") as mock_redis, \
-             patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True), \
-             patch("mangaba.vectorstores.redis._get_search_classes", return_value=mock_fields):
+        with (
+            patch("mangaba.vectorstores.redis.redis") as mock_redis,
+            patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True),
+            patch(
+                "mangaba.vectorstores.redis._get_search_classes",
+                return_value=mock_fields,
+            ),
+        ):
             mock_redis.Redis.from_url.return_value = mock_client
 
             # Re-register to ensure we get the current class identity
             from mangaba.vectorstores.redis import RedisVectorStore
+
             STORE_REGISTRY["redis"] = RedisVectorStore
 
             store = create_vectorstore(
@@ -99,8 +118,10 @@ class TestVectorStoreFactory:
         mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
         mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
 
-        with patch("mangaba.vectorstores.postgres.psycopg") as mock_psycopg, \
-             patch("mangaba.vectorstores.postgres.POSTGRES_AVAILABLE", True):
+        with (
+            patch("mangaba.vectorstores.postgres.psycopg") as mock_psycopg,
+            patch("mangaba.vectorstores.postgres.POSTGRES_AVAILABLE", True),
+        ):
             mock_psycopg.connect.return_value = mock_conn
             mock_psycopg.rows.dict_row.return_value = dict
 
@@ -140,8 +161,10 @@ class TestVectorStoreFactory:
         mock_client.get_or_create_collection.return_value = mock_collection
         mock_collection.name = "test_collection"
 
-        with patch("mangaba.vectorstores.chroma_db.chromadb") as mock_chroma_module, \
-             patch("mangaba.vectorstores.chroma_db.CHROMA_AVAILABLE", True):
+        with (
+            patch("mangaba.vectorstores.chroma_db.chromadb") as mock_chroma_module,
+            patch("mangaba.vectorstores.chroma_db.CHROMA_AVAILABLE", True),
+        ):
             mock_chroma_module.PersistentClient.return_value = mock_client
 
             STORE_REGISTRY["chroma"] = ChromaVectorStore

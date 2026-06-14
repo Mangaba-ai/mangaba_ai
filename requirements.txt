@@ -1,3 +1,0 @@
-# As dependências oficiais moram em pyproject.toml.
-# Use este arquivo apenas para instalar via pip tradicional.
--e .

@@ -1,5 +1,5 @@
 """
-Agent v3.0 — ReAct reasoning, memory, planning, guardrails.
+Agente v3.0 — Raciocínio ReAct, memória, planejamento, guardrails.
 """
 
 from __future__ import annotations
@@ -8,10 +8,11 @@ import logging
 import uuid
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
-from mangaba.core.types import AgentState, AgentStatus, LLMConfig, MemoryConfig, OpenRouterConfig
+from mangaba.core.types import AgentState, LLMConfig, MemoryConfig, OpenRouterConfig
 from mangaba.core.exceptions import AgentError
 from mangaba.core.events import EventBus, Event, EventType
 from mangaba.core.reasoning import ReActEngine
+from mangaba.core.llm import LLMClient
 
 if TYPE_CHECKING:
     from mangaba.tools.base import BaseTool
@@ -23,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 class Agent:
-    """Intelligent agent with ReAct reasoning, memory, and tool use.
+    """Agente inteligente com raciocínio ReAct, memória e uso de ferramentas.
 
     Example::
 
@@ -43,19 +44,19 @@ class Agent:
         goal: str,
         backstory: str,
         tools: Optional[List[BaseTool]] = None,
-        llm: Optional[Any] = None,  # LLMClient or provider string
-        llm_config: Optional[LLMConfig] = None,
-        api_key: Optional[str] = None,
+        llm: Optional[LLMClient | str | None] = None,  # LLMClient ou string do provedor
+        llm_config: Optional[LLMConfig | None] = None,
+        api_key: Optional[str | None] = None,
         verbose: bool = False,
-        memory: Optional[BaseMemory] = None,
-        memory_config: Optional[MemoryConfig] = None,
+        memory: Optional[BaseMemory | None] = None,
+        memory_config: Optional[MemoryConfig | None] = None,
         max_iterations: int = 15,
         max_retry_on_error: int = 3,
         allow_delegation: bool = True,
-        step_callback: Optional[Callable] = None,
-        guardrails: Optional[List[BaseGuardrail]] = None,
-        output_parser: Optional[BaseOutputParser] = None,
-        agent_id: Optional[str] = None,
+        step_callback: Optional[Callable | None] = None,
+        guardrails: Optional[List[BaseGuardrail] | None] = None,
+        output_parser: Optional[BaseOutputParser | None] = None,
+        agent_id: Optional[str | None] = None,
     ) -> None:
         if not role or not role.strip():
             raise ValueError("Role cannot be empty")
@@ -78,21 +79,26 @@ class Agent:
         self.memory = memory
         self.memory_config = memory_config or MemoryConfig()
 
-        self.agent_id = agent_id or f"agent_{role.lower().replace(' ', '_')}_{uuid.uuid4().hex[:8]}"
+        self.agent_id = (
+            agent_id or f"agent_{role.lower().replace(' ', '_')}_{uuid.uuid4().hex[:8]}"
+        )
 
-        # ── LLM setup ────────────────────────────────────────────────
+        # ── Configuração LLM ────────────────────────────────────────────
         if llm is not None and not isinstance(llm, str):
-            # Already an LLMClient instance
+            # Já é uma instância de LLMClient
             self.llm = llm
         else:
             self.llm = self._create_llm(llm, llm_config, api_key)
 
-        # ── Memory (auto-create short-term if nothing provided) ──────
+        # ── Memória (criar short-term automaticamente se nada fornecido) ──────
         if self.memory is None and self.memory_config.short_term:
             from mangaba.memory.short_term import ShortTermMemory
-            self.memory = ShortTermMemory(max_items=self.memory_config.max_short_term_items)
 
-        # ── ReAct engine ─────────────────────────────────────────────
+            self.memory = ShortTermMemory(
+                max_items=self.memory_config.max_short_term_items
+            )
+
+        # ── Motor ReAct ─────────────────────────────────────────────
         self._react = ReActEngine(
             llm=self.llm,
             tools=self.tools,
@@ -100,32 +106,34 @@ class Agent:
             verbose=self.verbose,
         )
 
-        # ── State ────────────────────────────────────────────────────
+        # ── Estado ────────────────────────────────────────────────────
         self.state = AgentState(agent_id=self.agent_id)
 
-        # ── Connected agents (for delegation) ────────────────────────
+        # ── Agentes conectados (para delegação) ────────────────────────
         self._peers: Dict[str, Agent] = {}
 
         if self.verbose:
             log.info("Agent initialized — role=%s tools=%d", self.role, len(self.tools))
 
-    # ── public API ─────────────────────────────────────────────────────
+    # ── API pública ─────────────────────────────────────────────────────
 
     def execute_task(self, task_description: str, context: Optional[str] = None) -> str:
-        """Execute a task using the ReAct loop with tool/function calling."""
-        EventBus.emit(Event(
-            event_type=EventType.AGENT_START,
-            source_id=self.agent_id,
-            data={"role": self.role, "task": task_description[:200]},
-        ))
+        """Executa uma tarefa usando o loop ReAct com chamada de ferramentas/funções."""
+        EventBus.emit(
+            Event(
+                event_type=EventType.AGENT_START,
+                source_id=self.agent_id,
+                data={"role": self.role, "task": task_description[:200]},
+            )
+        )
 
         system_prompt = self._build_system_prompt()
         user_prompt = self._build_user_prompt(task_description, context)
 
-        # Inject relevant memories
+        # Injetar memórias relevantes
         memory_context = self._get_memory_context(task_description)
 
-        last_error: Optional[Exception] = None
+        last_error: Optional[Exception | None] = None
         for attempt in range(1, self.max_retry_on_error + 1):
             try:
                 response = self._react.run(
@@ -140,51 +148,62 @@ class Agent:
                 # Guardrails
                 result_text = self._apply_guardrails(result_text)
 
-                # Output parser
+                # Parser de saída
                 if self.output_parser:
                     result_text = self.output_parser.parse(result_text)
 
-                # Store in memory
+                # Armazenar na memória
                 if self.memory:
                     self.memory.add(
                         f"Task: {task_description}\nResult: {result_text[:500]}",
                         metadata={"agent": self.role, "type": "task_result"},
                     )
 
-                EventBus.emit(Event(
-                    event_type=EventType.AGENT_END,
-                    source_id=self.agent_id,
-                    data={"result_preview": str(result_text)[:200]},
-                ))
+                EventBus.emit(
+                    Event(
+                        event_type=EventType.AGENT_END,
+                        source_id=self.agent_id,
+                        data={"result_preview": str(result_text)[:200]},
+                    )
+                )
                 return str(result_text)
 
             except Exception as exc:
                 last_error = exc
                 if attempt < self.max_retry_on_error:
-                    log.warning("Agent retry %d/%d: %s", attempt, self.max_retry_on_error, exc)
+                    log.warning(
+                        "Agent retry %d/%d: %s", attempt, self.max_retry_on_error, exc
+                    )
                     continue
                 break
 
-        EventBus.emit(Event(
-            event_type=EventType.AGENT_ERROR,
-            source_id=self.agent_id,
-            data={"error": str(last_error)},
-        ))
-        raise AgentError(f"Task failed after {self.max_retry_on_error} attempts: {last_error}", cause=last_error)
+        EventBus.emit(
+            Event(
+                event_type=EventType.AGENT_ERROR,
+                source_id=self.agent_id,
+                data={"error": str(last_error)},
+            )
+        )
+        raise AgentError(
+            f"Task failed after {self.max_retry_on_error} attempts: {last_error}",
+            cause=last_error,
+        )
 
     def connect_to(self, other: Agent) -> None:
-        """Register another agent as a peer for delegation."""
+        """Registra outro agente como par para delegação."""
         self._peers[other.agent_id] = other
         other._peers[self.agent_id] = self
 
-    def delegate(self, peer_id: str, task_description: str, context: Optional[str] = None) -> str:
-        """Delegate a task to a connected peer agent."""
+    def delegate(
+        self, peer_id: str, task_description: str, context: Optional[str] = None
+    ) -> str:
+        """Delega uma tarefa para um agente par conectado."""
         peer = self._peers.get(peer_id)
         if peer is None:
             raise AgentError(f"No peer agent with id '{peer_id}'")
         return peer.execute_task(task_description, context)
 
-    # ── prompt building ────────────────────────────────────────────────
+    # ── Construção de prompt ────────────────────────────────────────────────
 
     def _build_system_prompt(self) -> str:
         parts = [
@@ -215,26 +234,30 @@ class Agent:
             text = g.validate(text)
         return text
 
-    # ── LLM factory ────────────────────────────────────────────────────
+    # ── Fábrica LLM ────────────────────────────────────────────────────
     @staticmethod
-    def _create_llm(provider_str: Optional[str], llm_config: Optional[LLMConfig], api_key: Optional[str]) -> Any:
+    def _create_llm(
+        provider_str: Optional[str],
+        llm_config: Optional[LLMConfig],
+        api_key: Optional[str],
+    ) -> Any:
         from mangaba.core.llm import create_llm_client
-    
-        # Use the provided config or create a default one
+
+        # Usar a configuração fornecida ou criar uma padrão
         cfg = llm_config or LLMConfig()
-    
-        # Basic parameters
+
+        # Parâmetros básicos
         prov = provider_str or cfg.provider
         key = api_key or cfg.api_key
         model = cfg.model
-    
-        # Initialize options dictionary
+
+        # Inicializar dicionário de opções
         options = {
             "temperature": cfg.temperature,
             "max_output_tokens": cfg.max_tokens,
         }
 
-        # If it's an OpenRouterConfig, we extract the extra fields
+        # Se for um OpenRouterConfig, extraímos os campos extras
         if isinstance(cfg, OpenRouterConfig):
             options["site_name"] = cfg.site_name
             options["site_url"] = cfg.site_url
@@ -242,8 +265,5 @@ class Agent:
                 options["route"] = cfg.route
 
         return create_llm_client(
-            provider=prov,
-            api_key=key or "",
-            model=model,
-            **options
+            provider=prov, api_key=key or "", model=model, **options
         )

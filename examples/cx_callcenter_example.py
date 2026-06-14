@@ -7,6 +7,7 @@ Cenário: Análise e Resposta de Tickets de Suporte em Call Center
 
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mangaba import Agent, Task, Crew, Process
@@ -16,12 +17,12 @@ def cx_callcenter_example():
     """
     Exemplo: Crew de CX para análise de tickets e garantia de qualidade
     """
-    print("="*80)
+    print("=" * 80)
     print("🎧 EXEMPLO: CX Call Center - Análise e Resposta de Tickets")
-    print("="*80)
-    
+    print("=" * 80)
+
     # 1. Definir Agentes Especializados
-    
+
     # Agente 1: Especialista em Suporte (Analisa e Responde)
     support_specialist = Agent(
         role="Especialista Sênior em Suporte ao Cliente",
@@ -31,9 +32,9 @@ def cx_callcenter_example():
         e capacidade de acalmar situações tensas enquanto fornece soluções técnicas claras.
         Você sempre segue o tom de voz da empresa: profissional, acolhedor e prestativo.
         IMPORTANTE: Você deve sempre responder em Português do Brasil.""",
-        verbose=True
+        verbose=True,
     )
-    
+
     # Agente 2: Especialista em QA (Avalia Qualidade e Sentimento)
     qa_specialist = Agent(
         role="Especialista em Garantia de Qualidade (QA)",
@@ -43,9 +44,9 @@ def cx_callcenter_example():
         Você também é um especialista em análise de sentimento, capaz de detectar sinais emocionais
         sutis nas mensagens dos clientes para prevenir cancelamentos (churn).
         IMPORTANTE: Você deve sempre responder em Português do Brasil.""",
-        verbose=True
+        verbose=True,
     )
-    
+
     # Agente 3: Supervisor de CX (Visão Estratégica)
     cx_supervisor = Agent(
         role="Supervisor de Experiência do Cliente (CX)",
@@ -55,11 +56,11 @@ def cx_callcenter_example():
         Você fornece treinamento (coaching) aos agentes e sugere melhorias de processo para reduzir
         o volume de tickets e aumentar a satisfação do cliente (CSAT).
         IMPORTANTE: Você deve sempre responder em Português do Brasil.""",
-        verbose=True
+        verbose=True,
     )
-    
+
     # 2. Definir Tasks
-    
+
     # Task 1: Análise Inicial e Classificação
     analysis_task = Task(
         description="""Analise o seguinte ticket de cliente:
@@ -76,7 +77,7 @@ def cx_callcenter_example():
         - Categoria
         - Nível de Urgência
         - Detalhes Chave""",
-        agent=support_specialist
+        agent=support_specialist,
     )
 
     # Task 2: Elaboração da Resposta
@@ -93,9 +94,9 @@ def cx_callcenter_example():
         A resposta deve ser em Português do Brasil.""",
         expected_output="""Um rascunho completo de email de resposta pronto para ser enviado ao cliente.""",
         agent=support_specialist,
-        context=[analysis_task]
+        context=[analysis_task],
     )
-    
+
     # Task 3: Avaliação de QA e Sentimento
     qa_review_task = Task(
         description="""Revise a resposta redigida e o ticket original.
@@ -112,9 +113,9 @@ def cx_callcenter_example():
         - Pontos Fortes e Fracos
         - Sugestões de Melhoria (se houver)""",
         agent=qa_specialist,
-        context=[analysis_task, draft_response_task]
+        context=[analysis_task, draft_response_task],
     )
-    
+
     # Task 4: Relatório Gerencial e Recomendações
     supervisor_report_task = Task(
         description="""Revise toda a interação (Ticket, Análise, Resposta, Relatório de QA).
@@ -132,20 +133,25 @@ def cx_callcenter_example():
         - Nota de Coaching""",
         agent=cx_supervisor,
         context=[analysis_task, draft_response_task, qa_review_task],
-        output_file="cx_case_report.md"
+        output_file="cx_case_report.md",
     )
-    
+
     # 3. Criar Crew
     cx_crew = Crew(
         agents=[support_specialist, qa_specialist, cx_supervisor],
-        tasks=[analysis_task, draft_response_task, qa_review_task, supervisor_report_task],
+        tasks=[
+            analysis_task,
+            draft_response_task,
+            qa_review_task,
+            supervisor_report_task,
+        ],
         process=Process.SEQUENTIAL,
-        verbose=True
+        verbose=True,
     )
-    
+
     # 4. Executar o Crew
     print("\n🚀 Iniciando execução do Crew de CX...\n")
-    
+
     # Exemplo de Ticket de Cliente (Traduzido)
     sample_ticket = """
     Assunto: URGENTE - Cobrança Duplicada no meu Cartão de Crédito!!
@@ -158,17 +164,15 @@ def cx_callcenter_example():
     - João Silva
     ID da Conta: 12345
     """
-    
-    result = cx_crew.kickoff(inputs={
-        "ticket_content": sample_ticket
-    })
-    
-    print("\n" + "="*80)
+
+    result = cx_crew.kickoff(inputs={"ticket_content": sample_ticket})
+
+    print("\n" + "=" * 80)
     print("✅ CASO DE CX PROCESSADO")
-    print("="*80)
+    print("=" * 80)
     print(f"\n📊 Duração: {result.duration:.2f} segundos")
-    print(f"\n📄 Relatório Gerencial Final:")
-    print("-"*80)
+    print("\n📄 Relatório Gerencial Final:")
+    print("-" * 80)
     print(result.final_output)
     print("\n💾 Relatório completo salvo em: cx_case_report.md")
 

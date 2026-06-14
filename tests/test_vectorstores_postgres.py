@@ -1,6 +1,5 @@
-"""Tests for PostgresVectorStore"""
+"""Testes para PostgresVectorStore"""
 
-import json
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -27,6 +26,7 @@ class TestPostgresVectorStoreInit:
 
         try:
             from mangaba.vectorstores import postgres as pg_vs
+
             importlib.reload(pg_vs)
 
             with pytest.raises(ImportError, match="psycopg package is required"):
@@ -43,7 +43,10 @@ class TestPostgresVectorStoreInit:
             mock_psycopg.connect.return_value = mock_conn
 
             from mangaba.vectorstores.postgres import PostgresVectorStore
-            with pytest.raises(ValueError, match="PostgreSQL connection URL is required"):
+
+            with pytest.raises(
+                ValueError, match="PostgreSQL connection URL is required"
+            ):
                 PostgresVectorStore()
 
     def test_creates_table_on_init(self):
@@ -54,6 +57,7 @@ class TestPostgresVectorStoreInit:
             mock_psycopg.rows.dict_row = MagicMock()
 
             from mangaba.vectorstores.postgres import PostgresVectorStore
+
             PostgresVectorStore(
                 url="postgresql://user:pass@localhost:5432/test",
                 table_name="test_vectors",
@@ -69,9 +73,12 @@ class TestPostgresVectorStoreInit:
             mock_psycopg.connect.return_value = mock_conn
             mock_psycopg.rows.dict_row = MagicMock()
 
-            monkeypatch.setenv("MANGABA_VECTORSTORE_URL", "postgresql://env:pass@envhost:5432/envdb")
+            monkeypatch.setenv(
+                "MANGABA_VECTORSTORE_URL", "postgresql://env:pass@envhost:5432/envdb"
+            )
 
             from mangaba.vectorstores.postgres import PostgresVectorStore
+
             PostgresVectorStore()
 
             connect_call = mock_psycopg.connect.call_args
@@ -84,13 +91,19 @@ class TestPostgresVectorStoreInit:
             mock_psycopg.connect.return_value = mock_conn
             mock_psycopg.rows.dict_row = MagicMock()
 
-            monkeypatch.setenv("DATABASE_URL", "postgresql://fallback:pass@fallback:5432/fallback")
+            monkeypatch.setenv(
+                "DATABASE_URL", "postgresql://fallback:pass@fallback:5432/fallback"
+            )
 
             from mangaba.vectorstores.postgres import PostgresVectorStore
+
             PostgresVectorStore()
 
             connect_call = mock_psycopg.connect.call_args
-            assert connect_call[0][0] == "postgresql://fallback:pass@fallback:5432/fallback"
+            assert (
+                connect_call[0][0]
+                == "postgresql://fallback:pass@fallback:5432/fallback"
+            )
 
     def test_url_param_takes_precedence_over_env(self, monkeypatch):
         mock_conn, _ = _make_mock_pg_connection()
@@ -99,13 +112,19 @@ class TestPostgresVectorStoreInit:
             mock_psycopg.connect.return_value = mock_conn
             mock_psycopg.rows.dict_row = MagicMock()
 
-            monkeypatch.setenv("DATABASE_URL", "postgresql://env:pass@envhost:5432/envdb")
+            monkeypatch.setenv(
+                "DATABASE_URL", "postgresql://env:pass@envhost:5432/envdb"
+            )
 
             from mangaba.vectorstores.postgres import PostgresVectorStore
+
             PostgresVectorStore(url="postgresql://explicit:pass@explicit:5432/explicit")
 
             connect_call = mock_psycopg.connect.call_args
-            assert connect_call[0][0] == "postgresql://explicit:pass@explicit:5432/explicit"
+            assert (
+                connect_call[0][0]
+                == "postgresql://explicit:pass@explicit:5432/explicit"
+            )
 
 
 @pytest.fixture
@@ -117,6 +136,7 @@ def postgres_store():
         mock_psycopg.rows.dict_row = MagicMock()
 
         from mangaba.vectorstores.postgres import PostgresVectorStore
+
         store = PostgresVectorStore(
             url="postgresql://user:pass@localhost:5432/test",
             table_name="test_vectors",
@@ -159,7 +179,12 @@ class TestPostgresVectorStoreSearch:
     def test_search_returns_results(self, postgres_store):
         store, mock_conn, mock_cursor = postgres_store
         mock_cursor.fetchall.return_value = [
-            {"id": "abc123", "text": "hello world", "metadata": {"source": "test"}, "score": 0.92}
+            {
+                "id": "abc123",
+                "text": "hello world",
+                "metadata": {"source": "test"},
+                "score": 0.92,
+            }
         ]
 
         results = store.search([0.1, 0.2, 0.3], top_k=3)
@@ -180,7 +205,12 @@ class TestPostgresVectorStoreSearch:
     def test_search_handles_non_dict_metadata(self, postgres_store):
         store, mock_conn, mock_cursor = postgres_store
         mock_cursor.fetchall.return_value = [
-            {"id": "abc123", "text": "test", "metadata": "string_metadata", "score": 0.5}
+            {
+                "id": "abc123",
+                "text": "test",
+                "metadata": "string_metadata",
+                "score": 0.5,
+            }
         ]
 
         results = store.search([0.1, 0.2, 0.3])

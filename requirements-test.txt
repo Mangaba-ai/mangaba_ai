@@ -1,4 +1,0 @@
-# Dependências de desenvolvimento/teste são definidas como extras em pyproject.toml.
-# Execute: pip install -r requirements-test.txt
-# …ou diretamente: pip install -e ".[dev,test]"
--e .[dev,test]

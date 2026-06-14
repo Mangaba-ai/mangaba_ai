@@ -1,10 +1,9 @@
-"""LLM engine for Mangaba AI v3.0 — function calling, streaming, caching."""
+"""Motor LLM para Mangaba AI v3.0 — chamada de função, streaming, cache."""
 
-from .client import (
+from .client import LLMClient
+from .llm_factory import create_llm_client, get_supported_providers
+from .providers import (
     BaseLLMProvider,
-    LLMClient,
-    create_llm_client,
-    get_supported_providers,
     list_huggingface_models,
     hf_model_supports_tools,
     HF_OPEN_MODELS,

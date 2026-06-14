@@ -9,19 +9,24 @@ Run:
     pytest tests/test_vectorstores_integration.py -v -o "addopts=" --tb=short
 """
 
-import json
 import os
 import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
 
 REDIS_URL = os.getenv("MANGABA_REDIS_URL", "redis://localhost:6379")
-POSTGRES_URL = os.getenv("MANGABA_VECTORSTORE_URL", os.getenv("DATABASE_URL", "postgresql://postgres:minhasenha@localhost:5432/mangaba"))
+POSTGRES_URL = os.getenv(
+    "MANGABA_VECTORSTORE_URL",
+    os.getenv(
+        "DATABASE_URL", "postgresql://postgres:minhasenha@localhost:5432/mangaba"
+    ),
+)
 
 
 def redis_available() -> bool:
     try:
         import redis
+
         client = redis.Redis.from_url(REDIS_URL)
         client.ping()
         client.close()
@@ -33,6 +38,7 @@ def redis_available() -> bool:
 def postgres_available() -> bool:
     try:
         import psycopg
+
         conn = psycopg.connect(POSTGRES_URL)
         conn.close()
         return True

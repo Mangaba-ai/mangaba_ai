@@ -1,17 +1,17 @@
 """
-@tool decorator for Mangaba AI v3.0
+Decorador @tool para Mangaba AI v3.0
 
-Turns a plain function into a BaseTool instance, auto-inferring
-name, description (from docstring), and args_schema (from type hints).
+Transforma uma função simples em uma instância BaseTool, inferindo automaticamente
+nome, descrição (a partir do docstring) e args_schema (a partir de type hints).
 
-Example::
+Exemplo::
 
     @tool
     def search_web(query: str, max_results: int = 5) -> str:
-        \"\"\"Search the web for current information.\"\"\"
+        \"\"\"Busca informações atuais na web.\"\"\"
         ...
 
-    @tool(name="calculator", description="Evaluate math expressions")
+    @tool(name="calculator", description="Avalia expressões matemáticas")
     def calc(expression: str) -> str:
         ...
 """
@@ -33,16 +33,29 @@ def tool(
     description: Optional[str] = None,
     return_direct: bool = False,
 ) -> Any:
-    """Decorator that converts a function into a :class:`BaseTool`.
+    """Decorador que converte uma função em uma BaseTool.
 
-    Can be used with or without arguments::
+    Infere automaticamente o nome da ferramenta, descrição (a partir do docstring)
+    e esquema de argumentos (a partir de type hints e padrões).
+
+    Pode ser usado com ou sem argumentos::
 
         @tool
         def my_tool(x: int) -> str: ...
 
-        @tool(name="custom_name")
+        @tool(name="custom_name", description="Descrição personalizada")
         def my_tool(x: int) -> str: ...
+
+    Args:
+        fn: A função a converter. Se None, retorna um decorador.
+        name: Nome personalizado opcional para a ferramenta. O padrão é o nome da função.
+        description: Descrição personalizada opcional. O padrão é o docstring da função.
+        return_direct: Se deve retornar a saída da ferramenta diretamente ao usuário.
+
+    Returns:
+        Uma função decoradora ou uma instância BaseTool.
     """
+
     def _wrap(func: Callable[..., Any]) -> BaseTool:
         tool_name = name or func.__name__
         tool_desc = description or (inspect.getdoc(func) or func.__name__)
@@ -77,19 +90,22 @@ def tool(
 
 
 def _build_pydantic_model(func: Callable[..., Any], tool_name: str) -> Type[BaseModel]:
-    """Create a Pydantic model from the function signature."""
+    """Cria um modelo Pydantic a partir da assinatura da função.
+
+    Analisa a assinatura da função e type hints para construir um BaseModel
+    Pydantic que representa o esquema de entrada da ferramenta.
+
+    Args:
+        func: A função a analisar.
+        tool_name: Nome da ferramenta (usado para nomeação do modelo).
+
+    Returns:
+        Uma classe BaseModel Pydantic representando o esquema de entrada da função.
+    """
     sig = inspect.signature(func)
     hints = get_type_hints(func)
 
     fields: Dict[str, Any] = {}
-    type_map = {
-        str: (str, ...),
-        int: (int, ...),
-        float: (float, ...),
-        bool: (bool, ...),
-        list: (list, ...),
-        dict: (dict, ...),
-    }
 
     for param_name, param in sig.parameters.items():
         if param_name in ("self", "cls"):

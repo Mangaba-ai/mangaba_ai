@@ -1,4 +1,4 @@
-"""Memory system for Mangaba AI v3.0"""
+"""Sistema de memória para Mangaba AI v3.0"""
 
 from mangaba.memory.base import BaseMemory
 from mangaba.memory.short_term import ShortTermMemory

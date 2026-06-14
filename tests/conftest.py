@@ -15,8 +15,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from mangaba_agent import MangabaAgent
-    from protocols.a2a import A2AProtocol, A2AAgent
-    from protocols.mcp import MCPProtocol, MCPContext, ContextType, ContextPriority
+    from mangaba.protocols.a2a import A2AProtocol
+    from mangaba.protocols.mcp import MCPProtocol, MCPContext, ContextType, ContextPriority
+
     _LEGACY_AVAILABLE = True
 except (ImportError, ValueError):
     _LEGACY_AVAILABLE = False
@@ -31,7 +32,7 @@ def test_config():
         "model_name": "gemini-2.5-flash",
         "max_contexts": 50,
         "test_timeout": 30,
-        "mock_responses": True
+        "mock_responses": True,
     }
 
 
@@ -40,7 +41,7 @@ def mock_llm_client():
     """Mock global para o cliente LLM genérico"""
     if not _LEGACY_AVAILABLE:
         pytest.skip("Legacy MangabaAgent not available")
-    with patch('mangaba_agent.create_llm_client') as mock_factory:
+    with patch("mangaba_agent.create_llm_client") as mock_factory:
         mock_client = Mock()
         mock_client.generate_text.return_value = "Resposta simulada do modelo AI"
         mock_factory.return_value = mock_client
@@ -93,55 +94,63 @@ def sample_contexts():
     if not _LEGACY_AVAILABLE:
         pytest.skip("Legacy protocols not available")
     contexts = []
-    
+
     # Contexto de conversa
-    contexts.append(MCPContext.create(
-        context_type=ContextType.CONVERSATION,
-        content={
-            "message": "Olá, como posso ajudar?",
-            "user": "test_user",
-            "timestamp": datetime.now().isoformat()
-        },
-        tags=["greeting", "conversation"],
-        priority=ContextPriority.MEDIUM
-    ))
-    
+    contexts.append(
+        MCPContext.create(
+            context_type=ContextType.CONVERSATION,
+            content={
+                "message": "Olá, como posso ajudar?",
+                "user": "test_user",
+                "timestamp": datetime.now().isoformat(),
+            },
+            tags=["greeting", "conversation"],
+            priority=ContextPriority.MEDIUM,
+        )
+    )
+
     # Contexto de tarefa
-    contexts.append(MCPContext.create(
-        context_type=ContextType.TASK,
-        content={
-            "task": "Analisar documento",
-            "status": "pending",
-            "priority": "high"
-        },
-        tags=["analysis", "document", "pending"],
-        priority=ContextPriority.HIGH
-    ))
-    
+    contexts.append(
+        MCPContext.create(
+            context_type=ContextType.TASK,
+            content={
+                "task": "Analisar documento",
+                "status": "pending",
+                "priority": "high",
+            },
+            tags=["analysis", "document", "pending"],
+            priority=ContextPriority.HIGH,
+        )
+    )
+
     # Contexto de conhecimento
-    contexts.append(MCPContext.create(
-        context_type=ContextType.KNOWLEDGE,
-        content={
-            "topic": "Inteligência Artificial",
-            "summary": "IA é uma área da ciência da computação",
-            "keywords": ["AI", "machine learning", "deep learning"]
-        },
-        tags=["ai", "knowledge", "technology"],
-        priority=ContextPriority.MEDIUM
-    ))
-    
+    contexts.append(
+        MCPContext.create(
+            context_type=ContextType.KNOWLEDGE,
+            content={
+                "topic": "Inteligência Artificial",
+                "summary": "IA é uma área da ciência da computação",
+                "keywords": ["AI", "machine learning", "deep learning"],
+            },
+            tags=["ai", "knowledge", "technology"],
+            priority=ContextPriority.MEDIUM,
+        )
+    )
+
     # Contexto de memória
-    contexts.append(MCPContext.create(
-        context_type=ContextType.MEMORY,
-        content={
-            "user_preference": "português brasileiro",
-            "interaction_count": 5,
-            "last_topic": "programação"
-        },
-        tags=["user", "preferences", "memory"],
-        priority=ContextPriority.LOW
-    ))
-    
+    contexts.append(
+        MCPContext.create(
+            context_type=ContextType.MEMORY,
+            content={
+                "user_preference": "português brasileiro",
+                "interaction_count": 5,
+                "last_topic": "programação",
+            },
+            tags=["user", "preferences", "memory"],
+            priority=ContextPriority.LOW,
+        )
+    )
+
     return contexts
 
 
@@ -149,7 +158,7 @@ def sample_contexts():
 def connected_agents(mock_llm_client, test_config):
     """Fixture para criar múltiplos agentes conectados"""
     agents = []
-    
+
     # Cria 3 agentes
     for i in range(3):
         agent = MangabaAgent(
@@ -158,13 +167,13 @@ def connected_agents(mock_llm_client, test_config):
             enable_mcp=True,
         )
         agents.append(agent)
-    
+
     # Conecta todos os agentes entre si usando connect_to
     for i, agent in enumerate(agents):
         for j, other_agent in enumerate(agents):
             if i != j:
                 agent.connect_to(other_agent)
-    
+
     return agents
 
 
@@ -184,7 +193,7 @@ def sample_text_data():
         como listas, números e pontuação variada para garantir
         que o sistema seja robusto em diferentes cenários.""",
         "multilingual_text": "Hello world! Olá mundo! Hola mundo! Bonjour le monde!",
-        "technical_text": "A inteligência artificial (IA) utiliza algoritmos de machine learning para processar dados e gerar insights."
+        "technical_text": "A inteligência artificial (IA) utiliza algoritmos de machine learning para processar dados e gerar insights.",
     }
 
 
@@ -196,11 +205,11 @@ def sample_api_responses():
         "analysis_response": {
             "sentiment": "positive",
             "confidence": 0.85,
-            "keywords": ["teste", "análise", "positivo"]
+            "keywords": ["teste", "análise", "positivo"],
         },
         "translation_response": "This is a simulated translation.",
         "summary_response": "Resumo simulado do conteúdo fornecido.",
-        "error_response": "Erro simulado para testes de tratamento de erro."
+        "error_response": "Erro simulado para testes de tratamento de erro.",
     }
 
 
@@ -212,13 +221,14 @@ def setup_test_environment(monkeypatch):
     monkeypatch.setenv("MANGABA_ENV", "test")
     monkeypatch.setenv("MANGABA_LOG_LEVEL", "DEBUG")
     monkeypatch.setenv("MANGABA_API_KEY", "test_key")
-    
+
     # Desabilita logs durante testes (opcional)
     import logging
+
     logging.disable(logging.CRITICAL)
-    
+
     yield
-    
+
     # Cleanup após testes
     logging.disable(logging.NOTSET)
 
@@ -229,14 +239,15 @@ def performance_config():
     """Configuração para testes de performance"""
     return {
         "max_execution_time": 5.0,  # segundos
-        "max_memory_usage": 100,    # MB
+        "max_memory_usage": 100,  # MB
         "iterations": 100,
-        "concurrent_requests": 10
+        "concurrent_requests": 10,
     }
 
 
 # Helpers para testes (legacy)
 if _LEGACY_AVAILABLE:
+
     class TestHelpers:
         """Classe com métodos auxiliares para testes"""
 
@@ -245,19 +256,19 @@ if _LEGACY_AVAILABLE:
             """Cria um contexto de teste personalizado"""
             default_content = {
                 "test_data": "dados de teste",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-            content = kwargs.pop('content', default_content)
-            tags = kwargs.pop('tags', ['test'])
-            priority = kwargs.pop('priority', ContextPriority.MEDIUM)
+            content = kwargs.pop("content", default_content)
+            tags = kwargs.pop("tags", ["test"])
+            priority = kwargs.pop("priority", ContextPriority.MEDIUM)
 
             return MCPContext.create(
                 context_type=context_type,
                 content=content,
                 tags=tags,
                 priority=priority,
-                **kwargs
+                **kwargs,
             )
 
         @staticmethod
@@ -298,7 +309,7 @@ def test_helpers():
 # Marcadores personalizados
 pytestmark = [
     pytest.mark.filterwarnings("ignore::DeprecationWarning"),
-    pytest.mark.filterwarnings("ignore::PendingDeprecationWarning")
+    pytest.mark.filterwarnings("ignore::PendingDeprecationWarning"),
 ]
 
 

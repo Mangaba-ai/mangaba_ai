@@ -1,4 +1,4 @@
-"""RAG (Retrieval-Augmented Generation) pipeline for Mangaba AI v3.0"""
+"""Pipeline RAG (Retrieval-Augmented Generation) para Mangaba AI v3.0"""
 
 from mangaba.rag.document import Document
 from mangaba.rag.loaders import TextLoader, CSVLoader

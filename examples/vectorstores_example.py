@@ -88,7 +88,9 @@ if postgres_url:
         print(f"  Store count: {pg_store.count}")
 
         results = pg_store.search([0.9, 0.1, 0.0], top_k=1)
-        print(f"  Search result: {results[0]['content']} (score={results[0]['score']:.3f})")
+        print(
+            f"  Search result: {results[0]['content']} (score={results[0]['score']:.3f})"
+        )
 
         pg_store.clear()
         print(f"  After clear: count={pg_store.count}")

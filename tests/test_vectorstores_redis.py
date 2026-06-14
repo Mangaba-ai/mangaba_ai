@@ -1,4 +1,4 @@
-"""Tests for RedisVectorStore"""
+"""Testes para RedisVectorStore"""
 
 import json
 import pytest
@@ -16,7 +16,15 @@ def _make_mock_redis_client():
 
 
 def _mock_search_classes():
-    return (MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock())
+    return (
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+    )
 
 
 class TestRedisVectorStoreInit:
@@ -29,6 +37,7 @@ class TestRedisVectorStoreInit:
 
         try:
             from mangaba.vectorstores import redis as redis_vs
+
             importlib.reload(redis_vs)
 
             with pytest.raises(ImportError, match="redis package is required"):
@@ -42,40 +51,62 @@ class TestRedisVectorStoreInit:
         mock_client = _make_mock_redis_client()
         mock_client.ft.return_value.info.side_effect = Exception("Index does not exist")
 
-        with patch("mangaba.vectorstores.redis.redis") as mock_redis, \
-             patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True), \
-             patch("mangaba.vectorstores.redis._get_search_classes", side_effect=_mock_search_classes):
+        with (
+            patch("mangaba.vectorstores.redis.redis") as mock_redis,
+            patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True),
+            patch(
+                "mangaba.vectorstores.redis._get_search_classes",
+                side_effect=_mock_search_classes,
+            ),
+        ):
             mock_redis.Redis.from_url.return_value = mock_client
 
             from mangaba.vectorstores.redis import RedisVectorStore
-            store = RedisVectorStore(url="redis://localhost:6379", index_name="test", vector_dimensions=3)
+
+            store = RedisVectorStore(
+                url="redis://localhost:6379", index_name="test", vector_dimensions=3
+            )
 
             mock_client.ft.return_value.create_index.assert_called_once()
 
     def test_skips_index_creation_if_exists(self):
         mock_client = _make_mock_redis_client()
 
-        with patch("mangaba.vectorstores.redis.redis") as mock_redis, \
-             patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True), \
-             patch("mangaba.vectorstores.redis._get_search_classes", side_effect=_mock_search_classes):
+        with (
+            patch("mangaba.vectorstores.redis.redis") as mock_redis,
+            patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True),
+            patch(
+                "mangaba.vectorstores.redis._get_search_classes",
+                side_effect=_mock_search_classes,
+            ),
+        ):
             mock_redis.Redis.from_url.return_value = mock_client
 
             from mangaba.vectorstores.redis import RedisVectorStore
-            RedisVectorStore(url="redis://localhost:6379", index_name="test", vector_dimensions=3)
+
+            RedisVectorStore(
+                url="redis://localhost:6379", index_name="test", vector_dimensions=3
+            )
 
             mock_client.ft.return_value.create_index.assert_not_called()
 
     def test_uses_env_var_url(self, monkeypatch):
         mock_client = _make_mock_redis_client()
 
-        with patch("mangaba.vectorstores.redis.redis") as mock_redis, \
-             patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True), \
-             patch("mangaba.vectorstores.redis._get_search_classes", side_effect=_mock_search_classes):
+        with (
+            patch("mangaba.vectorstores.redis.redis") as mock_redis,
+            patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True),
+            patch(
+                "mangaba.vectorstores.redis._get_search_classes",
+                side_effect=_mock_search_classes,
+            ),
+        ):
             mock_redis.Redis.from_url.return_value = mock_client
 
             monkeypatch.setenv("MANGABA_REDIS_URL", "redis://custom-host:9999")
 
             from mangaba.vectorstores.redis import RedisVectorStore
+
             RedisVectorStore()
 
             call_args = mock_redis.Redis.from_url.call_args
@@ -84,12 +115,18 @@ class TestRedisVectorStoreInit:
     def test_defaults_to_localhost_when_no_url(self):
         mock_client = _make_mock_redis_client()
 
-        with patch("mangaba.vectorstores.redis.redis") as mock_redis, \
-             patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True), \
-             patch("mangaba.vectorstores.redis._get_search_classes", side_effect=_mock_search_classes):
+        with (
+            patch("mangaba.vectorstores.redis.redis") as mock_redis,
+            patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True),
+            patch(
+                "mangaba.vectorstores.redis._get_search_classes",
+                side_effect=_mock_search_classes,
+            ),
+        ):
             mock_redis.Redis.from_url.return_value = mock_client
 
             from mangaba.vectorstores.redis import RedisVectorStore
+
             RedisVectorStore()
 
             call_args = mock_redis.Redis.from_url.call_args
@@ -100,13 +137,21 @@ class TestRedisVectorStoreInit:
 def redis_store():
     mock_client = _make_mock_redis_client()
 
-    with patch("mangaba.vectorstores.redis.redis") as mock_redis, \
-         patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True), \
-         patch("mangaba.vectorstores.redis._get_search_classes", side_effect=_mock_search_classes):
+    with (
+        patch("mangaba.vectorstores.redis.redis") as mock_redis,
+        patch("mangaba.vectorstores.redis.REDIS_AVAILABLE", True),
+        patch(
+            "mangaba.vectorstores.redis._get_search_classes",
+            side_effect=_mock_search_classes,
+        ),
+    ):
         mock_redis.Redis.from_url.return_value = mock_client
 
         from mangaba.vectorstores.redis import RedisVectorStore
-        store = RedisVectorStore(url="redis://localhost:6379", index_name="test_vectors", vector_dimensions=3)
+
+        store = RedisVectorStore(
+            url="redis://localhost:6379", index_name="test_vectors", vector_dimensions=3
+        )
         yield store, mock_client
 
 

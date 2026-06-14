@@ -1,5 +1,5 @@
 """
-Factory functions for creating vector stores in Mangaba AI v3.0
+Funções de fábrica para criar armazenamentos de vetores em Mangaba AI v3.0
 """
 
 from __future__ import annotations
@@ -15,23 +15,28 @@ STORE_REGISTRY: Dict[str, Type[BaseVectorStore]] = {
 
 
 def register_store(name: str, cls: Type[BaseVectorStore]) -> None:
-    """Register a vector store class under a given name."""
+    """Registra uma classe de armazenamento de vetores sob um nome específico.
+
+    Args:
+        name: O nome para registrar o armazenamento.
+        cls: A classe de armazenamento de vetores para registrar.
+    """
     STORE_REGISTRY[name.lower()] = cls
 
 
 def create_vectorstore(store_type: str, **kwargs: Any) -> BaseVectorStore:
-    """Create a vector store by type name.
+    """Cria um armazenamento de vetores por nome de tipo.
 
     Args:
-        store_type: Type of store ("inmemory", "redis", "postgres", "chroma", "sqlite")
-        **kwargs: Additional arguments passed to the store constructor
+        store_type: Tipo de armazenamento ("inmemory", "redis", "postgres", "chroma", "sqlite").
+        **kwargs: Argumentos adicionais passados para o construtor do armazenamento.
 
     Returns:
-        An instance of the requested vector store
+        Uma instância do armazenamento de vetores solicitado.
 
     Raises:
-        ValueError: If the store type is not supported
-        ImportError: If required dependencies are missing
+        ValueError: Se o tipo de armazenamento não for suportado.
+        ImportError: Se as dependências necessárias estiverem faltando.
 
     Example:
         store = create_vectorstore("redis", url="redis://localhost:6379", vector_dimensions=1536)
@@ -52,12 +57,22 @@ def create_vectorstore(store_type: str, **kwargs: Any) -> BaseVectorStore:
 
 
 def get_supported_stores() -> tuple[str, ...]:
-    """Return tuple of supported vector store type names."""
+    """Retorna tupla de nomes de tipos de armazenamento de vetores suportados.
+
+    Returns:
+        Uma tupla de nomes de tipos de armazenamento suportados.
+    """
     return tuple(sorted(STORE_REGISTRY.keys()))
 
 
 def _try_register(name: str, module_path: str, class_name: str) -> None:
-    """Lazily register a vector store if its dependencies are available."""
+    """Registra preguiçosamente um armazenamento de vetores se suas dependências estiverem disponíveis.
+
+    Args:
+        name: O nome para registrar o armazenamento.
+        module_path: O caminho do módulo para importar.
+        class_name: O nome da classe para registrar.
+    """
     try:
         module = __import__(module_path, fromlist=[class_name])
         cls = getattr(module, class_name)

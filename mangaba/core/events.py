@@ -1,9 +1,9 @@
 """
-Event system and callback infrastructure for Mangaba AI v3.0
+Sistema de eventos e infraestrutura de callback para Mangaba AI v3.0
 
-Provides an EventBus that decouples producers (agents, tasks, crews) from
-consumers (loggers, tracers, UI), and a BaseCallback ABC for building
-custom handlers.
+Fornece um EventBus que desacopla produtores (agentes, tarefas, crews) de
+consumidores (loggers, tracers, UI), e uma ABC BaseCallback para construir
+manipuladores personalizados.
 """
 
 from __future__ import annotations
@@ -20,11 +20,12 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Event types
+# Tipos de eventos
 # ---------------------------------------------------------------------------
 
+
 class EventType(str, Enum):
-    # Agent
+    # Agente
     AGENT_START = "agent_start"
     AGENT_END = "agent_end"
     AGENT_ERROR = "agent_error"
@@ -36,7 +37,7 @@ class EventType(str, Enum):
     LLM_RETRY = "llm_retry"
     LLM_STREAM_CHUNK = "llm_stream_chunk"
 
-    # Tools
+    # Ferramentas
     TOOL_START = "tool_start"
     TOOL_END = "tool_end"
     TOOL_ERROR = "tool_error"
@@ -65,16 +66,17 @@ class EventType(str, Enum):
     GUARDRAIL_PASS = "guardrail_pass"
     GUARDRAIL_FAIL = "guardrail_fail"
 
-    # Generic
+    # Genérico
     CUSTOM = "custom"
 
 
 # ---------------------------------------------------------------------------
-# Event model
+# Modelo de evento
 # ---------------------------------------------------------------------------
 
+
 class Event(BaseModel):
-    """Immutable event emitted by framework components."""
+    """Evento imutável emitido pelos componentes do framework."""
 
     event_type: EventType
     data: Dict[str, Any] = Field(default_factory=dict)
@@ -86,11 +88,12 @@ class Event(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Callback ABC
+# Classe base abstrata de Callback
 # ---------------------------------------------------------------------------
 
+
 class BaseCallback(ABC):
-    """Abstract base for event handlers."""
+    """Base abstrata para manipuladores de eventos."""
 
     event_filter: Optional[Set[EventType]] = None
 
@@ -101,15 +104,16 @@ class BaseCallback(ABC):
 
     @abstractmethod
     def on_event(self, event: Event) -> None:
-        ...
+        raise NotImplementedError("on_event() must be implemented")
 
 
 # ---------------------------------------------------------------------------
-# Callback manager
+# Gerenciador de callbacks
 # ---------------------------------------------------------------------------
+
 
 class CallbackManager:
-    """Manages a collection of callbacks and dispatches events to them."""
+    """Gerencia uma coleção de callbacks e despacha eventos para eles."""
 
     def __init__(self, callbacks: Optional[List[BaseCallback]] = None) -> None:
         self._callbacks: List[BaseCallback] = list(callbacks or [])
@@ -126,7 +130,11 @@ class CallbackManager:
                 if cb.should_handle(event):
                     cb.on_event(event)
             except Exception:
-                logger.exception("Callback %s raised an error for event %s", type(cb).__name__, event.event_type)
+                logger.exception(
+                    "Callback %s raised an error for event %s",
+                    type(cb).__name__,
+                    event.event_type,
+                )
 
     @property
     def callbacks(self) -> List[BaseCallback]:
@@ -137,11 +145,12 @@ class CallbackManager:
 # Global EventBus singleton
 # ---------------------------------------------------------------------------
 
-class EventBus:
-    """Process-wide EventBus singleton.
 
-    Components can publish events via ``EventBus.emit(event)`` and register
-    handlers via ``EventBus.register(callback_or_fn, event_types)``.
+class EventBus:
+    """Singleton EventBus em todo o processo.
+
+    Componentes podem publicar eventos via ``EventBus.emit(event)`` e registrar
+    manipuladores via ``EventBus.register(callback_or_fn, event_types)``.
     """
 
     _manager = CallbackManager()
@@ -175,9 +184,11 @@ class EventBus:
 
 
 class _FunctionCallback(BaseCallback):
-    """Wraps a plain function as a BaseCallback."""
+    """Envolve uma função simples como um BaseCallback."""
 
-    def __init__(self, fn: Callable[[Event], None], event_filter: Optional[Set[EventType]] = None) -> None:
+    def __init__(
+        self, fn: Callable[[Event], None], event_filter: Optional[Set[EventType]] = None
+    ) -> None:
         self._fn = fn
         self.event_filter = event_filter
 

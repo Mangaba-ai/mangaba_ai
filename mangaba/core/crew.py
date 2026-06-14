@@ -1,5 +1,5 @@
 """
-Crew v3.0 — multi-agent orchestration with all process types.
+Crew v3.0 — orquestração multi-agente com todos os tipos de processo.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ class Process(Enum):
 
 
 class CrewOutput:
-    """Result of a crew execution, including metrics."""
+    """Resultado de uma execução de crew, incluindo métricas."""
 
     def __init__(
         self,
@@ -41,6 +41,7 @@ class CrewOutput:
         self.duration = duration
         self.crew_id = crew_id
         from datetime import datetime
+
         self.timestamp = datetime.now().isoformat()
 
     @property
@@ -54,7 +55,7 @@ class CrewOutput:
 
 
 class Crew:
-    """Orchestrate multiple agents working on multiple tasks.
+    """Orquestra múltiplos agentes trabalhando em múltiplas tarefas.
 
     Example::
 
@@ -94,19 +95,31 @@ class Crew:
         self._connect_agents()
 
         if self.verbose:
-            log.info("Crew %s: %d agents, %d tasks, process=%s", self.crew_id, len(agents), len(tasks), process.value)
+            log.info(
+                "Crew %s: %d agents, %d tasks, process=%s",
+                self.crew_id,
+                len(agents),
+                len(tasks),
+                process.value,
+            )
 
     # ── public API ─────────────────────────────────────────────────────
 
     def kickoff(self, inputs: Optional[Dict[str, Any]] = None) -> CrewOutput:
-        """Start the crew execution."""
+        """Inicia a execução da crew."""
         start = time.monotonic()
 
-        EventBus.emit(Event(
-            event_type=EventType.CREW_START,
-            source_id=self.crew_id,
-            data={"process": self.process.value, "agents": len(self.agents), "tasks": len(self.tasks)},
-        ))
+        EventBus.emit(
+            Event(
+                event_type=EventType.CREW_START,
+                source_id=self.crew_id,
+                data={
+                    "process": self.process.value,
+                    "agents": len(self.agents),
+                    "tasks": len(self.tasks),
+                },
+            )
+        )
 
         try:
             if self.process == Process.SEQUENTIAL:
@@ -121,17 +134,30 @@ class Crew:
                 raise CrewError(f"Unknown process: {self.process}")
 
             duration = time.monotonic() - start
-            result = CrewOutput(tasks_outputs=outputs, process=self.process, duration=duration, crew_id=self.crew_id)
+            result = CrewOutput(
+                tasks_outputs=outputs,
+                process=self.process,
+                duration=duration,
+                crew_id=self.crew_id,
+            )
 
-            EventBus.emit(Event(
-                event_type=EventType.CREW_END,
-                source_id=self.crew_id,
-                data={"duration": duration, "tasks_completed": len(outputs)},
-            ))
+            EventBus.emit(
+                Event(
+                    event_type=EventType.CREW_END,
+                    source_id=self.crew_id,
+                    data={"duration": duration, "tasks_completed": len(outputs)},
+                )
+            )
             return result
 
         except Exception as exc:
-            EventBus.emit(Event(event_type=EventType.CREW_ERROR, source_id=self.crew_id, data={"error": str(exc)}))
+            EventBus.emit(
+                Event(
+                    event_type=EventType.CREW_ERROR,
+                    source_id=self.crew_id,
+                    data={"error": str(exc)},
+                )
+            )
             raise
 
     # ── process implementations ────────────────────────────────────────
@@ -140,23 +166,37 @@ class Crew:
         outputs: List[TaskOutput] = []
         for i, task in enumerate(self.tasks, 1):
             if self.verbose:
-                log.info("[%d/%d] %s → %s", i, len(self.tasks), task.agent.role, task.description[:60])
+                log.info(
+                    "[%d/%d] %s → %s",
+                    i,
+                    len(self.tasks),
+                    task.agent.role,
+                    task.description[:60],
+                )
             output = task.execute(inputs)
             outputs.append(output)
         return outputs
 
     def _run_hierarchical(self, inputs: Dict[str, Any]) -> List[TaskOutput]:
         if len(self.agents) < 2:
-            raise CrewError("Hierarchical process needs >= 2 agents (1 manager + workers)")
+            raise CrewError(
+                "Hierarchical process needs >= 2 agents (1 manager + workers)"
+            )
 
         manager = self.agents[0]
         outputs: List[TaskOutput] = []
 
         for i, task in enumerate(self.tasks, 1):
             if self.verbose:
-                log.info("[%d/%d] Manager %s delegates to %s", i, len(self.tasks), manager.role, task.agent.role)
+                log.info(
+                    "[%d/%d] Manager %s delegates to %s",
+                    i,
+                    len(self.tasks),
+                    manager.role,
+                    task.agent.role,
+                )
 
-            # Manager refines instructions
+            # Gerente refina instruções
             delegation_prompt = (
                 f"You are the manager. Refine these instructions for your worker.\n"
                 f"Worker role: {task.agent.role}\n"
@@ -165,7 +205,7 @@ class Crew:
             )
             refined = manager.execute_task(delegation_prompt)
 
-            # Worker executes with refined instructions
+            # Worker executa com instruções refinadas
             original_desc = task.description
             task.description = f"{refined}\n\nOriginal task: {original_desc}"
             try:
@@ -173,7 +213,7 @@ class Crew:
             finally:
                 task.description = original_desc
 
-            # Manager reviews
+            # Gerente revisa
             review_prompt = (
                 f"Review this worker output.\nTask: {original_desc}\n"
                 f"Output: {output.result[:2000]}\n"
@@ -185,7 +225,7 @@ class Crew:
         return outputs
 
     def _run_parallel(self, inputs: Dict[str, Any]) -> List[TaskOutput]:
-        """Execute independent tasks concurrently using asyncio."""
+        """Executa tarefas independentes concorrentemente usando asyncio."""
 
         async def _run() -> List[TaskOutput]:
             coros = [task.aexecute(inputs) for task in self.tasks]
@@ -197,13 +237,13 @@ class Crew:
             loop = None
 
         if loop and loop.is_running():
-            # Already in an event loop — fall back to sequential
+            # Já em um event loop — voltar para execução sequencial
             return self._run_sequential(inputs)
 
         return asyncio.run(_run())
 
     def _run_consensual(self, inputs: Dict[str, Any]) -> List[TaskOutput]:
-        """All agents independently execute each task; results are merged."""
+        """Todos os agentes executam independentemente cada tarefa; resultados são mesclados."""
         outputs: List[TaskOutput] = []
 
         for task in self.tasks:
@@ -217,18 +257,20 @@ class Crew:
                 finally:
                     task.agent = original_agent
 
-            # Use first agent to synthesise consensus
+            # Usar primeiro agente para sintetizar consenso
             synthesis_prompt = (
                 "Multiple experts provided their analysis. Synthesise a consensus.\n\n"
                 + "\n---\n".join(agent_results)
             )
             consensus = self.agents[0].execute_task(synthesis_prompt)
-            outputs.append(TaskOutput(
-                description=task.description,
-                result=consensus,
-                agent="consensus",
-                success=True,
-            ))
+            outputs.append(
+                TaskOutput(
+                    description=task.description,
+                    result=consensus,
+                    agent="consensus",
+                    success=True,
+                )
+            )
         return outputs
 
     # ── internal ───────────────────────────────────────────────────────
@@ -236,12 +278,18 @@ class Crew:
     def _validate_setup(self) -> None:
         for task in self.tasks:
             if not task.agent:
-                raise CrewError(f"Task '{task.description[:50]}...' has no agent assigned")
+                raise CrewError(
+                    f"Task '{task.description[:50]}...' has no agent assigned"
+                )
             if task.agent not in self.agents:
-                raise CrewError(f"Task agent '{task.agent.role}' not in crew's agent list")
+                raise CrewError(
+                    f"Task agent '{task.agent.role}' not in crew's agent list"
+                )
             for dep in task.context:
                 if dep not in self.tasks:
-                    raise CrewError("Task has a dependency on a task that is not in this crew")
+                    raise CrewError(
+                        "Task has a dependency on a task that is not in this crew"
+                    )
 
     def _connect_agents(self) -> None:
         for i, a1 in enumerate(self.agents):

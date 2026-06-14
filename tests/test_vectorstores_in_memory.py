@@ -1,4 +1,4 @@
-"""Tests for InMemoryVectorStore"""
+"""Testes para InMemoryVectorStore"""
 
 import pytest
 

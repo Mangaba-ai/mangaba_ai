@@ -4,12 +4,10 @@ Script de configuração automática com suporte a UV.
 Funciona tanto com pip quanto com uv.
 """
 
-import os
 import sys
 import subprocess
 import shutil
 from pathlib import Path
-from typing import Optional, Tuple
 
 
 class SetupManager:
@@ -45,15 +43,15 @@ class SetupManager:
 
     def print_header(self, text: str):
         """Imprime cabeçalho colorido."""
-        print(f"\n{'='*60}")
-        print(f"  🥭 Mangaba AI - Setup Automático")
+        print(f"\n{'=' * 60}")
+        print("  🥭 Mangaba AI - Setup Automático")
         print(f"  {text}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
     def print_step(self, number: int, text: str):
         """Imprime passo do setup."""
         print(f"\n  [{number}] {text}")
-        print(f"  {'-'*55}")
+        print(f"  {'-' * 55}")
 
     def print_success(self, text: str):
         """Imprime mensagem de sucesso."""
@@ -95,8 +93,7 @@ class SetupManager:
             return True
         else:
             self.print_error(
-                f"Python {version.major}.{version.minor} não suportado! "
-                "Requer 3.8+"
+                f"Python {version.major}.{version.minor} não suportado! Requer 3.8+"
             )
             return False
 
@@ -133,8 +130,10 @@ class SetupManager:
                 self.print_success(f"Ambiente virtual criado: {self.venv_path}")
                 return True
         else:
-            if self.run_command([sys.executable, "-m", "venv", str(self.venv_path)],
-                              "Criando venv padrão"):
+            if self.run_command(
+                [sys.executable, "-m", "venv", str(self.venv_path)],
+                "Criando venv padrão",
+            ):
                 self.print_success(f"Ambiente virtual criado: {self.venv_path}")
                 return True
 
@@ -151,7 +150,7 @@ class SetupManager:
         else:
             if self.run_command(
                 [sys.executable, "-m", "pip", "install", "-e", "."],
-                "Instalando pacote em modo desenvolvimento"
+                "Instalando pacote em modo desenvolvimento",
             ):
                 self.print_success("Dependências instaladas com pip")
                 return True
@@ -174,9 +173,9 @@ class SetupManager:
 
         try:
             shutil.copy(str(self.config_template), str(self.env_file))
-            self.print_success(f"Arquivo .env criado")
+            self.print_success("Arquivo .env criado")
             print(f"    📝 Edite {self.env_file} com suas credenciais:")
-            print(f"       GOOGLE_API_KEY=sua_chave_aqui")
+            print("       GOOGLE_API_KEY=sua_chave_aqui")
             return True
         except Exception as e:
             self.print_error(f"Falha ao criar .env: {e}")
@@ -195,12 +194,11 @@ class SetupManager:
         if self.has_uv:
             return self.run_command(
                 ["uv", "run", "python", str(validation_script)],
-                "Executando validação com UV"
+                "Executando validação com UV",
             )
         else:
             return self.run_command(
-                [sys.executable, str(validation_script)],
-                "Executando validação"
+                [sys.executable, str(validation_script)], "Executando validação"
             )
 
     def run_setup(self):

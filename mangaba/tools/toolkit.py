@@ -1,10 +1,10 @@
 """
-Toolkit grouping for Mangaba AI v3.0
+Agrupamento de Toolkit para Mangaba AI v3.0
 
-A Toolkit bundles related tools together so they can be attached to an
-agent as a single unit.
+Um Toolkit agrupa ferramentas relacionadas para que possam ser anexadas a um
+agente como uma única unidade.
 
-Example::
+Exemplo::
 
     kit = FileToolkit()
     agent = Agent(role="...", tools=kit.get_tools(), ...)
@@ -21,22 +21,46 @@ from mangaba.tools.web_search import DuckDuckGoSearchTool
 
 
 class BaseToolkit(ABC):
-    """Abstract grouping of related tools."""
+    """Classe base abstrata para agrupar ferramentas relacionadas.
+
+    Um Toolkit agrupa ferramentas relacionadas para que possam ser anexadas
+    a um agente como uma única unidade.
+    """
 
     @abstractmethod
     def get_tools(self) -> List[BaseTool]:
-        ...
+        """Retorna a lista de ferramentas neste toolkit.
+
+        Returns:
+            Lista de instâncias BaseTool.
+        """
 
 
 class FileToolkit(BaseToolkit):
-    """File I/O tools: read, write, list directories."""
+    """Toolkit contendo ferramentas de E/S de arquivos.
+
+    Inclui ferramentas para ler arquivos, escrever arquivos e listar diretórios.
+    """
 
     def get_tools(self) -> List[BaseTool]:
+        """Retorna a lista de ferramentas de E/S de arquivos.
+
+        Returns:
+            Lista contendo FileReaderTool, FileWriterTool e DirectoryListTool.
+        """
         return [FileReaderTool(), FileWriterTool(), DirectoryListTool()]
 
 
 class WebToolkit(BaseToolkit):
-    """Web search tools."""
+    """Toolkit contendo ferramentas de busca na web.
+
+    Inclui ferramentas para buscar na web usando DuckDuckGo.
+    """
 
     def get_tools(self) -> List[BaseTool]:
+        """Retorna a lista de ferramentas de busca na web.
+
+        Returns:
+            Lista contendo DuckDuckGoSearchTool.
+        """
         return [DuckDuckGoSearchTool()]

@@ -1,7 +1,7 @@
-"""Tests for Mangaba AI v3.0 core modules."""
+"""Testes para módulos principais do Mangaba AI v3.0."""
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 # ── Types ─────────────────────────────────────────────────────────────
 
@@ -10,10 +10,8 @@ from mangaba.core.types import (
     Message,
     LLMResponse,
     AgentConfig,
-    TaskConfig,
     TokenUsage,
     ToolCall,
-    ToolResult,
 )
 
 
@@ -103,7 +101,6 @@ class TestEvents:
 
 # ── Tools ─────────────────────────────────────────────────────────────
 
-from mangaba.tools.base import BaseTool
 from mangaba.tools.decorator import tool
 from mangaba.tools.math_tools import CalculatorTool
 from mangaba.tools.text_tools import WordCounterTool
@@ -276,11 +273,13 @@ class TestCrew:
 
     def test_crew_requires_agents(self):
         from mangaba.core.exceptions import CrewError
+
         with pytest.raises(CrewError):
             Crew(agents=[], tasks=[self._make_task(self._make_agent())])
 
     def test_crew_requires_tasks(self):
         from mangaba.core.exceptions import CrewError
+
         with pytest.raises(CrewError):
             Crew(agents=[self._make_agent()], tasks=[])
 
@@ -290,7 +289,7 @@ class TestCrew:
 
 # ── Workflow ──────────────────────────────────────────────────────────
 
-from mangaba.core.workflow import Stage, Pipeline
+from mangaba.core.workflow import Pipeline
 
 
 class TestWorkflow:
@@ -331,9 +330,11 @@ class TestCallbacks:
 
 # ── Package imports ───────────────────────────────────────────────────
 
+
 class TestImports:
     def test_main_package(self):
         import mangaba
+
         assert mangaba.__version__ == "3.0.0"
         assert hasattr(mangaba, "Agent")
         assert hasattr(mangaba, "Task")
@@ -344,13 +345,16 @@ class TestImports:
         assert hasattr(mangaba, "EventBus")
 
     def test_memory_package(self):
-        from mangaba.memory import ShortTermMemory, LongTermMemory, EntityMemory
+        from mangaba.memory import ShortTermMemory
+
         assert ShortTermMemory is not None
 
     def test_rag_package(self):
-        from mangaba.rag import Document, RecursiveTextSplitter, RAGChain
+        from mangaba.rag import Document
+
         assert Document is not None
 
     def test_tools_package(self):
-        from mangaba.tools import BaseTool, tool, CalculatorTool
+        from mangaba.tools import BaseTool
+
         assert BaseTool is not None

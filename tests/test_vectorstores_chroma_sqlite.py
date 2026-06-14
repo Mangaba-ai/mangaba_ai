@@ -12,7 +12,13 @@ def chroma_only():
 @pytest.fixture(
     params=[
         pytest.param("sqlite", id="sqlite"),
-        pytest.param("chroma", id="chroma", marks=pytest.mark.skipif(not CHROMA_AVAILABLE, reason="chromadb not installed")),
+        pytest.param(
+            "chroma",
+            id="chroma",
+            marks=pytest.mark.skipif(
+                not CHROMA_AVAILABLE, reason="chromadb not installed"
+            ),
+        ),
     ]
 )
 def vector_store(request, tmp_path):

@@ -1,5 +1,5 @@
 """
-Task v3.0 — structured workflow unit with guardrails and output parsing.
+Task v3.0 — unidade de fluxo de trabalho estruturada com guardrails e análise de saída.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 
 class TaskOutput:
-    """Result of a task execution."""
+    """Resultado de uma execução de tarefa."""
 
     def __init__(
         self,
@@ -36,6 +36,7 @@ class TaskOutput:
         self.agent = agent
         self.success = success
         from datetime import datetime
+
         self.timestamp = datetime.now().isoformat()
 
     def __str__(self) -> str:
@@ -43,13 +44,13 @@ class TaskOutput:
 
 
 class Task:
-    """A structured task assigned to an Agent.
+    """Uma tarefa estruturada atribuída a um Agente.
 
     Example::
 
         task = Task(
-            description="Research {topic} for our report",
-            expected_output="A detailed report with 10 key findings",
+            description="Pesquisar {topic} para nosso relatório",
+            expected_output="Um relatório detalhado com 10 principais descobertas",
             agent=researcher,
             context=[previous_task],
             output_file="report.md",
@@ -99,16 +100,18 @@ class Task:
     # ── sync execution ─────────────────────────────────────────────────
 
     def execute(self, inputs: Optional[Dict[str, Any]] = None) -> TaskOutput:
-        """Execute the task synchronously."""
+        """Executa a tarefa de forma síncrona."""
         if not self.agent:
             raise TaskError("No agent assigned to this task")
 
         self.status = "running"
-        EventBus.emit(Event(
-            event_type=EventType.TASK_START,
-            source_id=self.task_id,
-            data={"description": self.description[:200], "agent": self.agent.role},
-        ))
+        EventBus.emit(
+            Event(
+                event_type=EventType.TASK_START,
+                source_id=self.task_id,
+                data={"description": self.description[:200], "agent": self.agent.role},
+            )
+        )
 
         attempts = max(1, self.retry_on_failure + 1)
         last_err: Optional[Exception] = None
@@ -144,11 +147,13 @@ class Task:
                     self.callback(self.output)
 
                 self.status = "completed"
-                EventBus.emit(Event(
-                    event_type=EventType.TASK_END,
-                    source_id=self.task_id,
-                    data={"status": "completed"},
-                ))
+                EventBus.emit(
+                    Event(
+                        event_type=EventType.TASK_END,
+                        source_id=self.task_id,
+                        data={"status": "completed"},
+                    )
+                )
                 return self.output
 
             except Exception as exc:
@@ -165,17 +170,19 @@ class Task:
             agent=self.agent.role if self.agent else "unknown",
             success=False,
         )
-        EventBus.emit(Event(
-            event_type=EventType.TASK_ERROR,
-            source_id=self.task_id,
-            data={"error": str(last_err)},
-        ))
+        EventBus.emit(
+            Event(
+                event_type=EventType.TASK_ERROR,
+                source_id=self.task_id,
+                data={"error": str(last_err)},
+            )
+        )
         raise TaskError(f"Task failed: {last_err}", cause=last_err)
 
     # ── async execution ────────────────────────────────────────────────
 
     async def aexecute(self, inputs: Optional[Dict[str, Any]] = None) -> TaskOutput:
-        """Execute the task asynchronously (runs in a thread executor)."""
+        """Executa a tarefa de forma assíncrona (executa em um executor de thread)."""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.execute, inputs)
 
@@ -201,6 +208,7 @@ class Task:
     def _save_to_file(self, content: str) -> None:
         try:
             import os
+
             directory = os.path.dirname(self.output_file)
             if directory:
                 os.makedirs(directory, exist_ok=True)

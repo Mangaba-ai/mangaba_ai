@@ -1,5 +1,5 @@
 """
-Text processing tools for Mangaba AI v3.0
+Ferramentas de processamento de texto para Mangaba AI v3.0
 """
 
 from __future__ import annotations
@@ -14,29 +14,64 @@ from mangaba.tools.base import BaseTool
 
 # ── Text Splitter ──────────────────────────────────────────────────────────
 
+
 class TextSplitInput(BaseModel):
-    text: str = Field(..., description="The text to split into chunks")
-    chunk_size: int = Field(default=1000, description="Maximum characters per chunk")
-    chunk_overlap: int = Field(default=200, description="Overlap between consecutive chunks")
+    """Esquema de entrada para a ferramenta de divisão de texto."""
+
+    text: str = Field(..., description="O texto para dividir em partes")
+    chunk_size: int = Field(default=1000, description="Máximo de caracteres por parte")
+    chunk_overlap: int = Field(
+        default=200, description="Sobreposição entre partes consecutivas"
+    )
 
 
 class TextSplitterTool(BaseTool):
-    """Split text into smaller overlapping chunks."""
+    """Divide texto em partes menores com sobreposição.
+
+    Usa uma estratégia de divisão recursiva que tenta quebrar o texto em
+    limites naturais (parágrafos, sentenças, palavras) antes de recorrer à
+    divisão por caracteres. A sobreposição entre as partes ajuda a manter o contexto.
+    """
 
     name = "text_splitter"
-    description = "Split long text into smaller chunks with optional overlap"
+    description = "Divide texto longo em partes menores com sobreposição opcional"
     args_schema = TextSplitInput
 
     _SEPARATORS = ["\n\n", "\n", ". ", " ", ""]
 
     def _run(self, text: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> str:
-        chunks = self._recursive_split(text, chunk_size, chunk_overlap, self._SEPARATORS)
-        result_lines = [f"--- Chunk {i+1}/{len(chunks)} ---\n{c}" for i, c in enumerate(chunks)]
+        """Divide o texto em partes.
+
+        Args:
+            text: O texto para dividir.
+            chunk_size: Máximo de caracteres por parte (padrão: 1000).
+            chunk_overlap: Sobreposição entre partes consecutivas (padrão: 200).
+
+        Returns:
+            String formatada com partes numeradas.
+        """
+        chunks = self._recursive_split(
+            text, chunk_size, chunk_overlap, self._SEPARATORS
+        )
+        result_lines = [
+            f"--- Chunk {i + 1}/{len(chunks)} ---\n{c}" for i, c in enumerate(chunks)
+        ]
         return "\n\n".join(result_lines)
 
     def _recursive_split(
         self, text: str, chunk_size: int, overlap: int, separators: List[str]
     ) -> List[str]:
+        """Divide recursivamente o texto em partes usando separadores especificados.
+
+        Args:
+            text: O texto para dividir.
+            chunk_size: Máximo de caracteres por parte.
+            overlap: Sobreposição entre partes consecutivas.
+            separators: Lista de separadores para tentar, em ordem de preferência.
+
+        Returns:
+            Lista de partes de texto.
+        """
         if len(text) <= chunk_size:
             return [text.strip()] if text.strip() else []
 
@@ -55,16 +90,22 @@ class TextSplitterTool(BaseTool):
                     if len(current) <= chunk_size:
                         chunks.append(current.strip())
                     else:
-                        chunks.extend(self._recursive_split(current, chunk_size, overlap, remaining_seps))
+                        chunks.extend(
+                            self._recursive_split(
+                                current, chunk_size, overlap, remaining_seps
+                            )
+                        )
                 current = part
 
         if current.strip():
             if len(current) <= chunk_size:
                 chunks.append(current.strip())
             else:
-                chunks.extend(self._recursive_split(current, chunk_size, overlap, remaining_seps))
+                chunks.extend(
+                    self._recursive_split(current, chunk_size, overlap, remaining_seps)
+                )
 
-        # Apply overlap
+        # Aplicar sobreposição
         if overlap > 0 and len(chunks) > 1:
             overlapped: List[str] = [chunks[0]]
             for i in range(1, len(chunks)):
@@ -77,21 +118,37 @@ class TextSplitterTool(BaseTool):
 
 # ── Word Counter ───────────────────────────────────────────────────────────
 
+
 class WordCountInput(BaseModel):
-    text: str = Field(..., description="Text to count words in")
+    """Esquema de entrada para a ferramenta de contador de palavras."""
+
+    text: str = Field(..., description="Texto para contar palavras")
 
 
 class WordCounterTool(BaseTool):
-    """Count words, sentences, and characters in text."""
+    """Conta palavras, sentenças e caracteres no texto.
+
+    Fornece estatísticas incluindo contagem de palavras, contagem de caracteres,
+    contagem de sentenças e contagem de parágrafos para o texto fornecido.
+    """
 
     name = "word_counter"
-    description = "Count words, sentences, and characters in text"
+    description = "Conta palavras, sentenças e caracteres no texto"
     args_schema = WordCountInput
 
     def _run(self, text: str) -> str:
+        """Conta palavras, sentenças, caracteres e parágrafos no texto.
+
+        Args:
+            text: O texto para analisar.
+
+        Returns:
+            String formatada com contagem de palavras, contagem de caracteres,
+            contagem de sentenças e contagem de parágrafos.
+        """
         words = len(text.split())
         chars = len(text)
-        sentences = len(re.split(r'[.!?]+', text.strip())) - 1 if text.strip() else 0
+        sentences = len(re.split(r"[.!?]+", text.strip())) - 1 if text.strip() else 0
         paragraphs = len([p for p in text.split("\n\n") if p.strip()])
         return (
             f"Words: {words}\n"

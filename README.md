@@ -489,6 +489,32 @@ with MCPClient(command=["npx", "-y", "@modelcontextprotocol/server-filesystem", 
 Funciona por stdio ou HTTP, com o SDK oficial `mcp` quando disponível e um
 transporte próprio sem dependências como fallback.
 
+### Busca web com Parallel Search MCP
+
+O exemplo [parallel_search_mcp.py](examples/parallel_search_mcp.py) usa o
+`MCPClient` HTTP para descobrir `web_search` e `web_fetch` e executá-las como
+`BaseTool` nativas. A busca é opcional e não altera os provedores existentes.
+
+```bash
+pip install -e .
+python examples/parallel_search_mcp.py "Python asyncio TaskGroup"
+# Buscar e também ler uma página específica:
+python examples/parallel_search_mcp.py "Python asyncio TaskGroup" \
+    --url https://docs.python.org/3/library/asyncio-task.html
+```
+
+O endpoint `https://search.parallel.ai/mcp` permite uso anônimo gratuito, com
+limites menores para exploração e uso leve. Não é necessária uma chave da
+Parallel nem o extra `mcp` para este transporte HTTP. O exemplo imprime os
+resultados com URLs e trechos, envia um `User-Agent` do Mangaba e compartilha
+um `session_id` entre busca e leitura. Consulte os limites e parâmetros na
+[documentação do Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp).
+
+Para usar as ferramentas em um agente, passe `mcp.get_tools()` para
+`Agent(tools=...)` dentro do bloco `with`, mantendo a conexão aberta durante a
+execução. A configuração e os custos de inferência do LLM são separados; este
+exemplo chama apenas as ferramentas e funciona sem credenciais de LLM.
+
 ## A2A — interoperar com agentes de outros frameworks
 
 O protocolo aberto Agent2Agent. Não confundir com `protocols/a2a.py`, que é o

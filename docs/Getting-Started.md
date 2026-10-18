@@ -14,21 +14,21 @@ Guia de instalação e primeiros passos com o Mangaba AI.
 
 ## Instalação
 
-### Via release do GitHub
-
-A v4 é distribuída pelas [releases do GitHub](https://github.com/Mangaba-ai/mangaba_ai/releases);
-o `mangaba` do PyPI ainda está na 3.3.0.
+### Via pip
 
 ```bash
 # Instalação básica (OpenAI, OpenRouter, Ollama, OpenAI-compatible)
-pip install "mangaba @ https://github.com/Mangaba-ai/mangaba_ai/releases/download/v4.0.0/mangaba-4.0.0-py3-none-any.whl"
+pip install mangaba
 
 # Com extras: google, anthropic, huggingface, providers, rag, redis,
 # postgres, chroma, documents, all
-pip install "mangaba[google,rag] @ https://github.com/Mangaba-ai/mangaba_ai/releases/download/v4.0.0/mangaba-4.0.0-py3-none-any.whl"
+pip install "mangaba[google,rag]"
+```
 
-# Com uv
-uv pip install "mangaba[google] @ https://github.com/Mangaba-ai/mangaba_ai/releases/download/v4.0.0/mangaba-4.0.0-py3-none-any.whl"
+### Via uv
+
+```bash
+uv pip install "mangaba[google]"
 ```
 
 ### Instalação para desenvolvimento

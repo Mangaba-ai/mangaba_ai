@@ -7,8 +7,8 @@
 
 # Mangaba AI
 
-[![PyPI version](https://img.shields.io/pypi/v/mangaba.svg)](https://pypi.org/project/mangaba/)
-[![Python](https://img.shields.io/pypi/pyversions/mangaba.svg)](https://www.python.org/)
+[![Release](https://img.shields.io/github/v/release/Mangaba-ai/mangaba_ai)](https://github.com/Mangaba-ai/mangaba_ai/releases/latest)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/Mangaba-ai/mangaba_ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Mangaba-ai/mangaba_ai/actions/workflows/ci.yml)
 
@@ -75,21 +75,24 @@ O Mangaba implementa as principais primitivas do CrewAI OSS, com a mesma nomencl
 
 ## Instalação
 
+A v4 é distribuída pelas [releases do GitHub](https://github.com/Mangaba-ai/mangaba_ai/releases).
+O `mangaba` do PyPI ainda está na 3.3.0 e não tem Flows, Knowledge, CLI nem a
+instalação enxuta — não use `pip install mangaba` para a v4.
+
 ```bash
 # Núcleo: OpenAI, OpenRouter, Ollama e servidores OpenAI-compatible
-pip install mangaba
+pip install "mangaba @ https://github.com/Mangaba-ai/mangaba_ai/releases/download/v4.0.0/mangaba-4.0.0-py3-none-any.whl"
 
-# SDK do provedor que você for usar
-pip install "mangaba[google]"        # Gemini
-pip install "mangaba[anthropic]"     # Claude
-pip install "mangaba[huggingface]"   # HuggingFace Inference
-pip install "mangaba[providers]"     # todos os provedores + tiktoken
+# Com o SDK do provedor que você for usar: google, anthropic, huggingface,
+# providers (todos + tiktoken) ou all (provedores, RAG, vector stores, documentos)
+pip install "mangaba[google] @ https://github.com/Mangaba-ai/mangaba_ai/releases/download/v4.0.0/mangaba-4.0.0-py3-none-any.whl"
 
-# Tudo (provedores, RAG, vector stores, documentos)
-pip install "mangaba[all]"
+# Fixar no requirements.txt / pyproject.toml
+mangaba[google] @ https://github.com/Mangaba-ai/mangaba_ai/releases/download/v4.0.0/mangaba-4.0.0-py3-none-any.whl
 
 # Desenvolvimento
-pip install "mangaba[dev]"
+git clone https://github.com/Mangaba-ai/mangaba_ai.git && cd mangaba_ai
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
@@ -890,7 +893,9 @@ Opcionais:
 - `pyyaml>=6.0` — Projetos declarativos da CLI (`pip install mangaba[yaml]`)
 - `mcp>=1.0.0` — SDK oficial do MCP; há fallback sem dependência (`pip install mangaba[mcp]`)
 - OpenTelemetry / Langfuse / MLflow / Phoenix — Tracing (`pip install mangaba[otel]`, `[langfuse]`, `[mlflow]`, `[phoenix]`, ou `[observability]`)
-- **Tudo:** `pip install mangaba[all]`
+- **Tudo:** extra `[all]`
+
+Os extras acima vão entre colchetes no nome, na instalação pela release: `pip install "mangaba[rag,redis] @ <url do wheel>"`.
 
 Modelos locais (Ollama, vLLM, LM Studio, llama.cpp, LocalAI) não precisam de
 nenhum extra — usam o cliente `openai`, que já é dependência do núcleo.

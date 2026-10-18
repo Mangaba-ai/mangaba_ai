@@ -1,30 +1,44 @@
 name: Publish
 
-# Publishes to PyPI through Trusted Publishing (OIDC) — no API token is stored.
-# One-time setup on PyPI: project "mangaba" → Publishing → add a GitHub
-# publisher with owner Mangaba-ai, repository mangaba_ai, workflow
-# publish.yml and environment pypi.
+# Every GitHub release gets the wheel and sdist attached, so it is installable
+# without PyPI:
+#   pip install "mangaba @ https://github.com/Mangaba-ai/mangaba_ai/releases/download/vX.Y.Z/mangaba-X.Y.Z-py3-none-any.whl"
+#
+# PyPI is optional and manual (Actions → Publish → Run workflow, pypi=true).
+# It uses Trusted Publishing, which an owner of the PyPI project "mangaba" must
+# enable once: Publishing → GitHub publisher with owner Mangaba-ai, repository
+# mangaba_ai, workflow publish.yml and environment pypi.
 
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build (e.g. v4.0.0)"
+        required: true
+      pypi:
+        description: "Also upload to PyPI (requires Trusted Publishing on the project)"
+        type: boolean
+        default: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Check version matches tag
-        if: github.event_name == 'release'
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           version=$(python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
-          tag="${GITHUB_REF_NAME#v}"
-          if [ "$version" != "$tag" ]; then
-            echo "pyproject.toml version $version does not match tag $GITHUB_REF_NAME" >&2
+          if [ "$version" != "${TAG#v}" ]; then
+            echo "pyproject.toml version $version does not match tag $TAG" >&2
             exit 1
           fi
       - name: Build
@@ -37,8 +51,25 @@ jobs:
           name: dist
           path: dist/
 
-  publish:
+  attach:
     needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Attach to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: gh release upload "$TAG" dist/* --clobber -R "$GITHUB_REPOSITORY"
+
+  pypi:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.pypi
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

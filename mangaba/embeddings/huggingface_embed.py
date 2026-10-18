@@ -47,7 +47,7 @@ class HuggingFaceEmbedding(BaseEmbedding):
                 from huggingface_hub import InferenceClient
             except ImportError as exc:
                 raise ImportError(
-                    "pip install huggingface-hub"
+                    "pip install 'mangaba[huggingface]'"
                 ) from exc
             self._client = InferenceClient(token=api_key)
             self._dim = self._get_dimension_from_model(model)

@@ -6,7 +6,7 @@ Guia de instalação e primeiros passos com o Mangaba AI.
 
 ## Pré-requisitos
 
-- **Python** ≥ 3.9
+- **Python** ≥ 3.10
 - **pip** ou **uv** (gerenciador de pacotes)
 - **API Key** de um provider LLM (Google, OpenAI, Anthropic, etc.)
 
@@ -17,8 +17,11 @@ Guia de instalação e primeiros passos com o Mangaba AI.
 ### Via pip
 
 ```bash
-# Instalação básica
+# Instalação básica (OpenAI, OpenRouter, Ollama, OpenAI-compatible)
 pip install mangaba
+
+# SDK do provedor: google, anthropic, huggingface ou providers (todos)
+pip install "mangaba[google]"
 
 # Com suporte a RAG (numpy)
 pip install mangaba[rag]

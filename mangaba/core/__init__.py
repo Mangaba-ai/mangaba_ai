@@ -10,6 +10,7 @@ from mangaba.core.reasoning import ReActEngine
 from mangaba.core.guardrails import GuardrailChain
 from mangaba.core.output_parsers import JSONOutputParser, PydanticOutputParser
 from mangaba.core.planner import TaskPlanner
+from mangaba.tools.decorator import tool
 
 __all__ = [
     "Agent", "Task", "Crew", "Process",
@@ -20,4 +21,5 @@ __all__ = [
     "GuardrailChain",
     "JSONOutputParser", "PydanticOutputParser",
     "TaskPlanner",
+    "tool",
 ]

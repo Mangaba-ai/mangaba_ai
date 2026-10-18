@@ -26,7 +26,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -34,25 +33,45 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
+# Core install stays small: the OpenAI SDK covers OpenAI, OpenRouter, Ollama and
+# every OpenAI-compatible server (vLLM, llama.cpp, LM Studio). The other
+# provider SDKs are imported lazily and live in extras.
 dependencies = [
-    "google-generativeai>=0.3.0",
     "openai>=1.6.0",
-    "anthropic>=0.20.0",
-    "huggingface-hub>=0.20.0",
-    "python-dotenv>=0.19.0",
-    "loguru>=0.6.0",
     "pydantic>=2.0.0",
+    "python-dotenv>=0.19.0",
     "requests>=2.25.0",
-    "websockets>=10.0",
-    "tiktoken>=0.5.0",
 ]
 
 [project.scripts]
 mangaba = "mangaba.cli.main:main"
 
 [project.optional-dependencies]
+google = [
+    "google-generativeai>=0.3.0",
+]
+
+anthropic = [
+    "anthropic>=0.20.0",
+]
+
+huggingface = [
+    "huggingface-hub>=0.20.0",
+]
+
+tokenizer = [
+    "tiktoken>=0.5.0",
+]
+
+providers = [
+    "google-generativeai>=0.3.0",
+    "anthropic>=0.20.0",
+    "huggingface-hub>=0.20.0",
+    "tiktoken>=0.5.0",
+]
+
 tools = [
     "duckduckgo-search>=3.9.0",
 ]
@@ -121,6 +140,10 @@ chroma = [
 ]
 
 all = [
+    "google-generativeai>=0.3.0",
+    "anthropic>=0.20.0",
+    "huggingface-hub>=0.20.0",
+    "tiktoken>=0.5.0",
     "duckduckgo-search>=3.9.0",
     "numpy>=1.24.0",
     "sentence-transformers>=2.2.0",
@@ -135,6 +158,7 @@ all = [
 ]
 
 dev = [
+    "loguru>=0.6.0",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.11.1",
@@ -158,6 +182,11 @@ dev = [
 ]
 
 test = [
+    "loguru>=0.6.0",
+    "google-generativeai>=0.3.0",
+    "anthropic>=0.20.0",
+    "huggingface-hub>=0.20.0",
+    "tiktoken>=0.5.0",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.11.1",
@@ -167,13 +196,15 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mangaba-ai/mangaba-ai"
-"Bug Reports" = "https://github.com/mangaba-ai/mangaba-ai/issues"
-Source = "https://github.com/mangaba-ai/mangaba-ai"
-Documentation = "https://github.com/mangaba-ai/mangaba-ai#readme"
+Homepage = "https://www.mangaba.ia.br"
+"Bug Reports" = "https://github.com/Mangaba-ai/mangaba_ai/issues"
+Source = "https://github.com/Mangaba-ai/mangaba_ai"
+Documentation = "https://github.com/Mangaba-ai/mangaba_ai#readme"
 
 [tool.hatch.build.targets.wheel]
-packages = ["mangaba", "protocols", "utils"]
+# Only the framework ships. The repo-root legacy modules (protocols/, utils/,
+# mangaba_agent.py) would land as generic top-level names in site-packages.
+packages = ["mangaba"]
 
 [tool.uv]
 # Configurações específicas para o gerenciador uv

@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     env:
       # Dummy key: config.py only checks presence at import time.
       # Real-network tests are deselected with `-m "not network"`.

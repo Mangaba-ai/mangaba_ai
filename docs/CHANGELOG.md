@@ -5,11 +5,29 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.0.0] - 2026-07-24
+## [4.0.0] - 2026-10-18
 
 Release grande: fecha a distância de recursos para os frameworks de
-orquestração de referência. Tudo abaixo é aditivo — o código escrito para a
-3.x continua funcionando.
+orquestração de referência. A API é aditiva — o código escrito para a 3.x
+continua funcionando —, mas a instalação mudou (veja "Alterado").
+
+### Alterado
+
+- 📦 **Instalação enxuta.** O núcleo depende só de `openai`, `pydantic`,
+  `python-dotenv` e `requests`, o que cobre OpenAI, OpenRouter, Ollama e
+  qualquer servidor OpenAI-compatible. Os SDKs dos outros provedores viraram
+  extras: `mangaba[google]`, `mangaba[anthropic]`, `mangaba[huggingface]`,
+  `mangaba[tokenizer]` (tiktoken) ou `mangaba[providers]` para todos.
+  **Quem usa Gemini precisa instalar `mangaba[google]`**; sem ele, o erro diz
+  qual extra instalar. `loguru` e `websockets` saíram das dependências
+- 📦 O wheel deixou de instalar os pacotes legados `protocols` e `utils` como
+  nomes de topo no site-packages (colidiam com módulos do usuário)
+- 🔗 URLs do projeto corrigidas para `Mangaba-ai/mangaba_ai`
+
+### Corrigido
+
+- `from mangaba.core import tool` voltou a funcionar (o exemplo do README
+  quebrava com `ImportError`)
 
 ### Adicionado
 

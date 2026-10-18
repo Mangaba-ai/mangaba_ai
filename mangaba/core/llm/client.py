@@ -335,7 +335,7 @@ class GoogleLLMProvider(BaseLLMProvider):
             import google.generativeai as genai  # type: ignore
         except ImportError as exc:  # pragma: no cover
             raise ImportError(
-                "Package 'google-generativeai' not found. Install with: pip install google-generativeai"
+                "Package 'google-generativeai' not found. Install with: pip install 'mangaba[google]'"
             ) from exc
 
         genai.configure(api_key=api_key)
@@ -579,7 +579,7 @@ class AnthropicLLMProvider(BaseLLMProvider):
         try:
             from anthropic import Anthropic  # type: ignore
         except ImportError as exc:  # pragma: no cover
-            raise ImportError("Package 'anthropic' not found. Install with: pip install anthropic") from exc
+            raise ImportError("Package 'anthropic' not found. Install with: pip install 'mangaba[anthropic]'") from exc
         self._client = Anthropic(api_key=api_key)
 
     def generate(self, prompt: str, images: Optional[List[Any]] = None, **kwargs: Any) -> LLMResponse:
@@ -773,7 +773,7 @@ class HuggingFaceLLMProvider(BaseLLMProvider):
         try:
             from huggingface_hub import InferenceClient  # type: ignore
         except ImportError as exc:  # pragma: no cover
-            raise ImportError("Package 'huggingface-hub' not found. Install with: pip install huggingface-hub") from exc
+            raise ImportError("Package 'huggingface-hub' not found. Install with: pip install 'mangaba[huggingface]'") from exc
         self._client = InferenceClient(token=api_key)
 
     @classmethod

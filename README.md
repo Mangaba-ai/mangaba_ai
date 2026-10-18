@@ -23,7 +23,8 @@ Framework profissional de orquestração multi-agente com ReAct reasoning, funct
 Execute o exemplo abaixo em 1 comando (veja `examples/quickstart.py`):
 
 ```bash
-pip install mangaba
+git clone https://github.com/Mangaba-ai/mangaba_ai.git && cd mangaba_ai
+pip install -e ".[google]"
 export GOOGLE_API_KEY="sua-chave"
 python examples/quickstart.py
 ```
@@ -75,13 +76,20 @@ O Mangaba implementa as principais primitivas do CrewAI OSS, com a mesma nomencl
 ## Instalação
 
 ```bash
+# Núcleo: OpenAI, OpenRouter, Ollama e servidores OpenAI-compatible
 pip install mangaba
 
-# Com RAG e embeddings
-pip install mangaba[all]
+# SDK do provedor que você for usar
+pip install "mangaba[google]"        # Gemini
+pip install "mangaba[anthropic]"     # Claude
+pip install "mangaba[huggingface]"   # HuggingFace Inference
+pip install "mangaba[providers]"     # todos os provedores + tiktoken
+
+# Tudo (provedores, RAG, vector stores, documentos)
+pip install "mangaba[all]"
 
 # Desenvolvimento
-pip install mangaba[dev]
+pip install "mangaba[dev]"
 ```
 
 ## Quick Start
@@ -861,15 +869,16 @@ hf_model_supports_tools("google/gemma-2-9b-it")                # False — promp
 Núcleo:
 
 - `pydantic>=2.0.0` — Validação de tipos
-- `google-generativeai>=0.3.0` — Google Gemini
-- `openai>=1.6.0` — OpenAI GPT
-- `anthropic>=0.20.0` — Anthropic Claude
-- `huggingface-hub>=0.20.0` — HuggingFace
-- `tiktoken>=0.5.0` — Contagem de tokens
+- `openai>=1.6.0` — OpenAI, OpenRouter, Ollama e servidores OpenAI-compatible
 - `requests>=2.25.0` — HTTP client
-- `loguru>=0.6.0` — Logging
+- `python-dotenv>=0.19.0` — Leitura de `.env`
 
 Opcionais:
+
+- `google-generativeai>=0.3.0` — Google Gemini (`pip install mangaba[google]`)
+- `anthropic>=0.20.0` — Anthropic Claude (`pip install mangaba[anthropic]`)
+- `huggingface-hub>=0.20.0` — HuggingFace (`pip install mangaba[huggingface]`)
+- `tiktoken>=0.5.0` — Contagem exata de tokens OpenAI (`pip install mangaba[tokenizer]`)
 
 - `numpy>=1.24.0` — RAG e embeddings (`pip install mangaba[rag]`)
 - `sentence-transformers>=2.2.0` — Embeddings HF (`pip install mangaba[embeddings]`)

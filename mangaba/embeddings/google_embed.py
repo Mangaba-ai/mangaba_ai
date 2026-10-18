@@ -16,7 +16,7 @@ class GoogleEmbedding(BaseEmbedding):
         try:
             import google.generativeai as genai  # type: ignore
         except ImportError as exc:
-            raise ImportError("pip install google-generativeai") from exc
+            raise ImportError("pip install 'mangaba[google]'") from exc
         genai.configure(api_key=api_key)
         self._genai = genai
         self.model = model

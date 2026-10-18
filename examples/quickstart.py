@@ -2,7 +2,7 @@
 """Quickstart do Mangaba AI — do zero ao primeiro crew em 1 comando.
 
 Uso:
-    pip install mangaba
+    pip install -e ".[google]"          # na raiz do repositório
     export GOOGLE_API_KEY="sua-chave"   # ou OPENAI_API_KEY / ANTHROPIC_API_KEY
     python examples/quickstart.py
 

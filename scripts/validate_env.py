@@ -29,7 +29,10 @@ class EnvironmentValidator:
     """Classe para validação do ambiente"""
     
     def __init__(self):
-        self.project_root = Path(__file__).parent
+        # scripts/validate_env.py → raiz do repositório (#17)
+        self.project_root = Path(__file__).resolve().parent.parent
+        if str(self.project_root) not in sys.path:
+            sys.path.insert(0, str(self.project_root))
         self.env_file = self.project_root / '.env'
         self.results = []
         self.warnings = []
@@ -85,11 +88,12 @@ class EnvironmentValidator:
     def check_required_files(self) -> bool:
         """Verifica arquivos obrigatórios"""
         required_files = [
+            'pyproject.toml',
+            'mangaba/__init__.py',
             'mangaba_agent.py',
             'protocols/__init__.py',
             'protocols/a2a.py',
             'protocols/mcp.py',
-            'requirements.txt'
         ]
         
         all_ok = True
@@ -121,7 +125,7 @@ class EnvironmentValidator:
                 "Environment File",
                 "ERROR",
                 "Arquivo .env não encontrado",
-                "Execute: cp .env.template .env"
+                "Execute: cp .env.example .env"
             )
             return False
         
@@ -272,16 +276,34 @@ class EnvironmentValidator:
     
     def check_dependencies(self) -> bool:
         """Verifica dependências instaladas"""
+        # Núcleo obrigatório; SDKs de provedor são extras (mangaba[google] etc.)
         required_packages = [
-            'google-generativeai',
+            'mangaba',
             'openai',
-            'anthropic',
-            'huggingface-hub',
+            'pydantic',
             'python-dotenv',
-            'loguru'
+            'requests',
         ]
+        optional_packages = {
+            'google-generativeai': 'mangaba[google]',
+            'anthropic': 'mangaba[anthropic]',
+            'huggingface-hub': 'mangaba[huggingface]',
+        }
         
         all_ok = True
+        
+        for package, extra in optional_packages.items():
+            found = subprocess.run(
+                [sys.executable, '-m', 'pip', 'show', package],
+                capture_output=True,
+                text=True,
+            ).returncode == 0
+            self.log_result(
+                f"Package: {package}",
+                "OK" if found else "WARNING",
+                "Instalado" if found else "Opcional, não instalado",
+                "Provedor disponível" if found else f"Para usar este provedor: pip install '{extra}'",
+            )
         
         for package in required_packages:
             try:
@@ -311,7 +333,7 @@ class EnvironmentValidator:
                     f"Package: {package}",
                     "ERROR",
                     "Pacote não instalado",
-                    "Execute: pip install -r requirements.txt"
+                    "Execute na raiz do repositório: pip install -e ."
                 )
                 all_ok = False
         
@@ -320,15 +342,12 @@ class EnvironmentValidator:
     def check_imports(self) -> bool:
         """Verifica se imports funcionam"""
         imports_to_test = [
-            ('mangaba_agent', 'MangabaAgent'),
-            ('protocols.a2a', 'A2AProtocol'),
-            ('protocols.mcp', 'MCPProtocol'),
-            ('google.generativeai', None),
+            ('mangaba', 'Agent'),
+            ('mangaba', 'Crew'),
+            ('mangaba', 'Task'),
+            ('mangaba.flows', 'Flow'),
             ('openai', None),
-            ('anthropic', None),
-            ('huggingface_hub', None),
             ('dotenv', None),
-            ('loguru', None)
         ]
         
         all_ok = True
@@ -565,9 +584,9 @@ class EnvironmentValidator:
         
         print()
         print("[INFO] Para mais informações, consulte:")
-        print("   - SETUP.md (guia de configuração)")
+        print("   - docs/SETUP.md (guia de configuração)")
         print("   - README.md (documentação geral)")
-        print("   - .env.template (exemplo de configuração)")
+        print("   - .env.example (exemplo de configuração)")
     
     def save_report(self, filename: str = "validation_report.json"):
         """Salva relatório em JSON"""
@@ -578,7 +597,8 @@ class EnvironmentValidator:
                 'ok_count': len([r for r in self.results if r['status'] == 'OK']),
                 'warning_count': len(self.warnings),
                 'error_count': len(self.errors),
-                'skip_count': len([r for r in self.results if r['status'] == 'SKIP'])
+                'skip_count': len([r for r in self.results if r['status'] == 'SKIP']),
+                'valid': len(self.errors) == 0
             },
             'results': self.results,
             'environment': {
@@ -669,8 +689,11 @@ def main():
         validator = EnvironmentValidator()
         
         if args.json_output:
-            # Executa validação silenciosa
-            validator.run_validation(save_report=False)
+            # Executa validação silenciosa: o texto vai para stderr e o stdout
+            # fica só com o JSON, que o quick_setup.py interpreta (#18)
+            import contextlib
+            with contextlib.redirect_stdout(sys.stderr):
+                validator.run_validation(save_report=args.save_report)
             
             # Output apenas JSON
             report = {
@@ -684,7 +707,8 @@ def main():
                 },
                 'results': validator.results
             }
-            print(json.dumps(report, indent=2))
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+            sys.exit(0 if report['summary']['valid'] else 1)
         else:
             # Execução normal
             success = validator.run_validation(save_report=args.save_report)

@@ -13,6 +13,7 @@ import shutil
 from pathlib import Path
 from typing import Optional, List
 import json
+import re
 from datetime import datetime
 
 
@@ -30,9 +31,10 @@ class QuickSetup:
     """Classe para configuração rápida do projeto"""
     
     def __init__(self):
-        self.project_root = Path(__file__).parent.parent
+        # scripts/quick_setup.py → raiz do repositório, de onde quer que seja chamado (#17)
+        self.project_root = Path(__file__).resolve().parent.parent
         self.env_file = self.project_root / '.env'
-        self.env_template = self.project_root / '.env.template'
+        self.env_template = self.project_root / '.env.example'
         self.venv_path = self.project_root / 'venv'
         self.steps_completed = []
         self.errors = []
@@ -65,11 +67,11 @@ class QuickSetup:
         """Verifica versão do Python"""
         version = sys.version_info
         
-        if version.major < 3 or (version.major == 3 and version.minor < 8):
+        if version.major < 3 or (version.major == 3 and version.minor < 10):
             self.log_step(
                 "Verificar Python",
                 False,
-                f"Python 3.8+ necessário. Atual: {version.major}.{version.minor}"
+                f"Python 3.10+ necessário. Atual: {version.major}.{version.minor}"
             )
             return False
         
@@ -133,19 +135,21 @@ class QuickSetup:
     
     def upgrade_pip(self) -> bool:
         """Atualiza pip no ambiente virtual"""
-        pip_path = self.get_venv_pip()
-        if not pip_path:
+        python_path = self.get_venv_python()
+        if not python_path:
             self.log_step(
                 "Atualizar pip",
                 False,
-                "pip não encontrado no ambiente virtual"
+                "Python do ambiente virtual não encontrado"
             )
             return False
         
         try:
             print("[INFO] Atualizando pip...")
+            # `python -m pip`: o executável pip não consegue se substituir
+            # enquanto roda (falha no Windows e no Python 3.13) (#15)
             subprocess.run(
-                [pip_path, 'install', '--upgrade', 'pip'],
+                [python_path, '-m', 'pip', 'install', '--upgrade', 'pip'],
                 check=True,
                 capture_output=True
             )
@@ -166,53 +170,41 @@ class QuickSetup:
             return False
     
     def install_dependencies(self) -> bool:
-        """Instala dependências"""
-        pip_path = self.get_venv_pip()
-        if not pip_path:
+        """Instala o Mangaba em modo editável com Gemini e dependências de teste"""
+        python_path = self.get_venv_python()
+        if not python_path:
             self.log_step(
                 "Instalar Dependências",
                 False,
-                "pip não encontrado"
+                "Python do ambiente virtual não encontrado"
             )
             return False
         
-        requirements_files = [
-            ('requirements.txt', 'Dependências principais'),
-            ('requirements-test.txt', 'Dependências de teste')
-        ]
-        
-        all_success = True
-        
-        for req_file, description in requirements_files:
-            req_path = self.project_root / req_file
-            
-            if not req_path.exists():
-                print(f"⚠️ {req_file} não encontrado, pulando...")
-                continue
-            
-            try:
-                print(f"[INFO] Instalando {description.lower()}...")
-                subprocess.run(
-                    [pip_path, 'install', '-r', str(req_path)],
-                    check=True,
-                    capture_output=True
-                )
-                
-                self.log_step(
-                    f"Instalar {description}",
-                    True,
-                    f"Instalado de {req_file}"
-                )
-                
-            except subprocess.CalledProcessError as e:
-                self.log_step(
-                    f"Instalar {description}",
-                    False,
-                    f"Erro ao instalar de {req_file}: {e}"
-                )
-                all_success = False
-        
-        return all_success
+        # Caminho absoluto: `-e .` dentro de requirements.txt é resolvido a
+        # partir do diretório atual, não do arquivo
+        target = f"{self.project_root}[google,test]"
+        try:
+            print("[INFO] Instalando mangaba[google,test]...")
+            subprocess.run(
+                [python_path, '-m', 'pip', 'install', '-e', target],
+                check=True,
+                capture_output=True,
+                cwd=str(self.project_root),
+            )
+            self.log_step(
+                "Instalar Dependências",
+                True,
+                "mangaba instalado em modo editável com [google,test]"
+            )
+            return True
+        except subprocess.CalledProcessError as e:
+            detail = (e.stderr or b"").decode(errors="replace").strip().splitlines()[-1:] or [str(e)]
+            self.log_step(
+                "Instalar Dependências",
+                False,
+                f"Erro: {detail[0]}"
+            )
+            return False
     
     def setup_env_file(self) -> bool:
         """Configura arquivo .env"""
@@ -234,7 +226,7 @@ class QuickSetup:
             self.log_step(
                 "Configurar .env",
                 False,
-                ".env.template não encontrado"
+                ".env.example não encontrado"
             )
             return False
         
@@ -264,16 +256,19 @@ class QuickSetup:
             with open(self.env_file, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Substitui valores
-            replacements = {
-                'your_google_api_key_here': api_key,
-                'gemini-2.5-flash': model_name,
-                'MangabaAgent': agent_name,
-                'INFO': log_level
+            # Preenche as chaves do .env.example (linhas KEY=valor)
+            values = {
+                'GOOGLE_API_KEY': api_key,
+                'MODEL_NAME': model_name,
+                'AGENT_NAME': agent_name,
+                'LOG_LEVEL': log_level,
             }
-            
-            for old, new in replacements.items():
-                content = content.replace(old, new)
+            for key, value in values.items():
+                content, count = re.subn(
+                    rf'^{key}=.*$', lambda _m, k=key, v=value: f'{k}={v}', content, flags=re.MULTILINE
+                )
+                if not count:
+                    content += f'\n{key}={value}\n'
             
             with open(self.env_file, 'w', encoding='utf-8') as f:
                 f.write(content)
@@ -310,15 +305,13 @@ import sys
 sys.path.insert(0, ".")
 
 try:
-    # Testa imports básicos
-    from mangaba_agent import MangabaAgent
-    from protocols.a2a import A2AProtocol
-    from protocols.mcp import MCPProtocol
+    # Testa imports do framework
+    from mangaba import Agent, Crew, Task, tool
+    from mangaba.flows import Flow
     
     # Testa dependências
     import google.generativeai as genai
     from dotenv import load_dotenv
-    from loguru import logger
     
     print("SUCCESS: Todos os imports funcionaram")
     
@@ -382,7 +375,7 @@ except Exception as e:
             )
             return False
         
-        validate_script = self.project_root / "validate_env.py"
+        validate_script = self.project_root / "scripts" / "validate_env.py"
         if not validate_script.exists():
             self.log_step(
                 "Validação Final",
@@ -401,8 +394,8 @@ except Exception as e:
                 timeout=60
             )
             
-            if result.returncode == 0:
-                # Parse JSON output
+            if result.stdout.strip():
+                # stdout traz só o JSON; os logs da validação vão para stderr (#18)
                 try:
                     validation_result = json.loads(result.stdout)
                     if validation_result.get('summary', {}).get('valid', False):
@@ -480,17 +473,17 @@ except Exception as e:
             print("   2. Execute os testes:")
             print("      python -m pytest tests/ -v")
             print("   3. Teste o agente:")
-            print("      python mangaba_agent.py")
+            print("      python examples/quickstart.py")
             print()
             print("[INFO] Documentação:")
             print("   - README.md (visão geral)")
-            print("   - SETUP.md (configuração detalhada)")
+            print("   - docs/SETUP.md (configuração detalhada)")
             print("   - examples/ (exemplos de uso)")
         else:
             print(f"{Colors.RED}{Colors.BOLD}[ERROR] CONFIGURAÇÃO INCOMPLETA{Colors.END}")
             print("Resolva os erros acima e execute novamente.")
             print()
-            print("[INFO] Para configuração manual, consulte SETUP.md")
+            print("[INFO] Para configuração manual, consulte docs/SETUP.md")
     
     def run_setup(self, skip_validation: bool = False) -> bool:
         """Executa configuração completa"""

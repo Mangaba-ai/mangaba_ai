@@ -804,7 +804,7 @@ examples/                  # Exemplos práticos
 | OpenRouter | Nativo + fallback | Sim | Roteamento multi-modelo |
 | Google Gemini | Nativo | Sim | `gemini-2.5-flash` |
 | OpenAI | Nativo | Sim | `gpt-4o-mini` |
-| Anthropic | Nativo (tool_use) | Sim | `claude-3-haiku-20240307` |
+| Anthropic | Nativo (tool_use) | Sim | `claude-haiku-4-5-20251001` |
 | HuggingFace | Nativo (11 modelos) / via prompt (14 modelos) | Sim, via `chat_completion` | `mistralai/Mistral-7B-Instruct-v0.3` |
 | Ollama | Nativo + fallback por prompt | Sim | Roda 100% local, sem API key |
 | OpenAI-compatible | Nativo | Sim | vLLM, LM Studio, llama.cpp, LocalAI |

@@ -10,7 +10,7 @@ O Mangaba AI suporta 5 providers de LLM com interface unificada, function callin
 |---|---|---|---|---|
 | **Google Gemini** | `google`, `gemini` | `gemini-2.5-flash` | ✅ Nativo | ✅ |
 | **OpenAI** | `openai` | `gpt-4o-mini` | ✅ Nativo | ✅ |
-| **Anthropic** | `anthropic`, `claude` | `claude-sonnet-4-20250514` | ✅ Tool Use | ✅ |
+| **Anthropic** | `anthropic`, `claude` | `claude-sonnet-5-5` | ✅ Tool Use | ✅ |
 | **HuggingFace** | `huggingface`, `hf` | `meta-llama/Llama-3.1-8B-Instruct` | ⚠️ Prompt-based | ✅ |
 | **OpenRouter** | `openrouter` | Varia | ✅ Via proxy | ✅ |
 
@@ -173,7 +173,7 @@ llm = create_llm_client(
 llm = create_llm_client(
     provider="anthropic",
     api_key="ANTHROPIC_API_KEY",
-    model="claude-sonnet-4-20250514",
+    model="claude-sonnet-5-5",
     temperature=0.7,
     max_output_tokens=8192,
 )
@@ -183,8 +183,8 @@ llm = create_llm_client(
 
 | Model | Context | Uso |
 |---|---|---|
-| `claude-sonnet-4-20250514` | 200K | Equilíbrio custo/performance |
-| `claude-opus-4-20250514` | 200K | Máxima qualidade |
+| `claude-sonnet-5-5` | 200K | Equilíbrio custo/performance |
+| `claude-opus-4-8` | 200K | Máxima qualidade |
 | `claude-haiku-3-5` | 200K | Rápido, eficiente |
 
 ---

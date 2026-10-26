@@ -71,7 +71,7 @@ PROVIDER_KEY_ENVS: Dict[str, List[str]] = {
 PROVIDER_DEFAULT_MODELS: Dict[str, str] = {
     "google": "gemini-2.5-flash",
     "openai": "gpt-4o-mini",
-    "anthropic": "claude-3-haiku-20240307",
+    "anthropic": "claude-haiku-4-5-20251001",
     "huggingface": "mistralai/Mistral-7B-Instruct-v0.3",
     "openrouter": "google/gemini-2.5-flash",
 }
